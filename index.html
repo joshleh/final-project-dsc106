@@ -34,65 +34,67 @@
     <p>The most challenging part will be implementing meaningful interactivity that allows users to engage with the data in a useful way. Designing interactive components such as toggling between male and female datasets, hover effects, and comparisons between estrus and non-estrus states will require thoughtful design and testing.</p>
     
     <script>
-        // Sample Data
-        const sampleData = [
-            { time: 0, femaleTemp: 37.1, maleTemp: 36.9, femaleAct: 30, maleAct: 28 },
-            { time: 1, femaleTemp: 37.3, maleTemp: 37.0, femaleAct: 35, maleAct: 29 },
-            { time: 2, femaleTemp: 37.2, maleTemp: 36.8, femaleAct: 32, maleAct: 31 },
-            { time: 3, femaleTemp: 37.5, maleTemp: 37.1, femaleAct: 40, maleAct: 33 },
-            { time: 4, femaleTemp: 37.8, maleTemp: 37.2, femaleAct: 45, maleAct: 35 }
-        ];
+        // Function to load and process the actual dataset
+        async function loadAndProcessData() {
+            const response = await fetch('mouse_data.csv'); // Ensure this file is accessible
+            const text = await response.text();
+            const rows = text.trim().split('\n').map(row => row.split(','));
+            
+            const columnNames = rows[0]; // First row contains headers
+            const data = rows.slice(1).map(row => row.map(parseFloat)); // Convert to numbers
+            
+            // Compute average temperature and activity over time
+            const temperatureData = data.map((row, i) => ({
+                time: i, // Assume each row represents a minute
+                avgTemp: row.reduce((sum, val) => sum + val, 0) / row.length
+            }));
+            
+            createLineChart("#temperatureChart", temperatureData, "time", "avgTemp", "Temperature (°C)", "blue");
+        }
         
-        function createLineChart(svgId, data, xKey, yKey1, yKey2, yLabel, color1, color2) {
+        function createLineChart(svgId, data, xKey, yKey, yLabel, color) {
             const svg = d3.select(svgId),
-                  margin = {top: 20, right: 30, bottom: 30, left: 40},
+                  margin = {top: 20, right: 30, bottom: 50, left: 60},
                   width = +svg.attr("width") - margin.left - margin.right,
                   height = +svg.attr("height") - margin.top - margin.bottom;
             
-            const x = d3.scaleLinear().domain([0, 4]).range([0, width]);
-            const y = d3.scaleLinear().domain([d3.min(data, d => Math.min(d[yKey1], d[yKey2])) - 1, d3.max(data, d => Math.max(d[yKey1], d[yKey2])) + 1]).range([height, 0]);
+            const x = d3.scaleLinear().domain([0, d3.max(data, d => d[xKey])]).range([0, width]);
+            const y = d3.scaleLinear().domain([d3.min(data, d => d[yKey]) - 1, d3.max(data, d => d[yKey]) + 1]).range([height, 0]);
             
-            const line1 = d3.line()
+            const line = d3.line()
                 .x(d => x(d[xKey]))
-                .y(d => y(d[yKey1]));
-            
-            const line2 = d3.line()
-                .x(d => x(d[xKey]))
-                .y(d => y(d[yKey2]));
+                .y(d => y(d[yKey]));
             
             const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
             
             g.append("g")
                 .attr("transform", `translate(0,${height})`)
-                .call(d3.axisBottom(x));
+                .call(d3.axisBottom(x))
+                .append("text")
+                .attr("x", width / 2)
+                .attr("y", 40)
+                .attr("fill", "black")
+                .text("Time (Minutes)");
             
             g.append("g")
-                .call(d3.axisLeft(y));
-            
-            g.append("path")
-                .datum(data)
-                .attr("fill", "none")
-                .attr("stroke", color1)
-                .attr("stroke-width", 2)
-                .attr("d", line1);
-            
-            g.append("path")
-                .datum(data)
-                .attr("fill", "none")
-                .attr("stroke", color2)
-                .attr("stroke-width", 2)
-                .attr("d", line2);
-            
-            svg.append("text")
-                .attr("x", width / 2)
-                .attr("y", 20)
-                .style("text-anchor", "middle")
-                .style("font-size", "16px")
+                .call(d3.axisLeft(y))
+                .append("text")
+                .attr("transform", "rotate(-90)")
+                .attr("x", -height / 2)
+                .attr("y", -50)
+                .attr("fill", "black")
                 .text(yLabel);
+            
+            g.append("path")
+                .datum(data)
+                .attr("fill", "none")
+                .attr("stroke", color)
+                .attr("stroke-width", 2)
+                .attr("d", line);
         }
         
-        createLineChart("#temperatureChart", sampleData, "time", "femaleTemp", "maleTemp", "Temperature (°C)", "blue", "red");
-        createLineChart("#activityChart", sampleData, "time", "femaleAct", "maleAct", "Activity Level", "green", "purple");
+        // Load and process the actual dataset on page load
+        loadAndProcessData();
     </script>
 </body>
 </html>
