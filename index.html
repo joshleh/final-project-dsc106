@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mouse Activity & Temperature Analysis</title>
+    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; }
+        .chart-container { width: 80%; margin: auto; }
+        .tooltip { position: absolute; background: white; padding: 5px; border: 1px solid black; visibility: hidden; }
+    </style>
+</head>
+<body>
+    <h1>Rhythms of the Night: Analyzing Mouse Activity and Temperature Cycles</h1>
+    <p>This project explores the relationship between activity levels and body temperature in mice over a 14-day period.</p>
+    
+    <h2>Average Temperature Trends</h2>
+    <div class="chart-container">
+        <svg id="temperatureChart" width="800" height="400"></svg>
+    </div>
+    
+    <script>
+        // Sample Data
+        const sampleData = [
+            { time: 0, femaleTemp: 37.1, maleTemp: 36.9 },
+            { time: 1, femaleTemp: 37.3, maleTemp: 37.0 },
+            { time: 2, femaleTemp: 37.2, maleTemp: 36.8 },
+            { time: 3, femaleTemp: 37.5, maleTemp: 37.1 },
+            { time: 4, femaleTemp: 37.8, maleTemp: 37.2 }
+        ];
+        
+        const svg = d3.select("#temperatureChart"),
+              margin = {top: 20, right: 30, bottom: 30, left: 40},
+              width = +svg.attr("width") - margin.left - margin.right,
+              height = +svg.attr("height") - margin.top - margin.bottom;
+        
+        const x = d3.scaleLinear().domain([0, 4]).range([0, width]);
+        const y = d3.scaleLinear().domain([36.5, 38]).range([height, 0]);
+        
+        const lineFemale = d3.line()
+            .x(d => x(d.time))
+            .y(d => y(d.femaleTemp));
+        
+        const lineMale = d3.line()
+            .x(d => x(d.time))
+            .y(d => y(d.maleTemp));
+        
+        const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+        
+        g.append("g")
+            .attr("transform", `translate(0,${height})`)
+            .call(d3.axisBottom(x));
+        
+        g.append("g")
+            .call(d3.axisLeft(y));
+        
+        g.append("path")
+            .datum(sampleData)
+            .attr("fill", "none")
+            .attr("stroke", "blue")
+            .attr("stroke-width", 2)
+            .attr("d", lineFemale);
+        
+        g.append("path")
+            .datum(sampleData)
+            .attr("fill", "none")
+            .attr("stroke", "red")
+            .attr("stroke-width", 2)
+            .attr("d", lineMale);
+    </script>
+</body>
+</html>
