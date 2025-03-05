@@ -5,12 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mouse Activity & Temperature Analysis</title>
     <script src="https://d3js.org/d3.v6.min.js"></script>
-    <style>
-        body { font-family: Arial, sans-serif; text-align: center; margin: 20px; }
-        .chart-container { width: 80%; margin: auto; }
-        .tooltip { position: absolute; background: white; padding: 5px; border: 1px solid black; visibility: hidden; }
-        .legend { font-size: 14px; }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <h1>Rhythms of the Night: Analyzing Mouse Activity and Temperature Cycles</h1>
@@ -25,16 +20,34 @@
         <option value="day2">Day 2</option>
         <option value="day3">Day 3</option>
         <option value="day4">Day 4</option>
+        <option value="day5">Day 5</option>
+        <option value="day6">Day 6</option>
+        <option value="day7">Day 7</option>
+        <option value="day8">Day 8</option>
+        <option value="day9">Day 9</option>
+        <option value="day10">Day 10</option>
+        <option value="day11">Day 11</option>
+        <option value="day12">Day 12</option>
+        <option value="day13">Day 13</option>
+        <option value="day14">Day 14</option>
     </select>
     
     <h2>Average Temperature Trends</h2>
     <div class="chart-container">
         <svg id="temperatureChart" width="800" height="400"></svg>
+        <div class="legend">
+            <span style="color: blue;">■ Female</span>
+            <span style="color: red;">■ Male</span>
+        </div>
     </div>
     
     <h2>Activity Trends Over Time</h2>
     <div class="chart-container">
         <svg id="activityChart" width="800" height="400"></svg>
+        <div class="legend">
+            <span style="color: green;">■ Female</span>
+            <span style="color: orange;">■ Male</span>
+        </div>
     </div>
     
     <script>
@@ -111,15 +124,6 @@
                 .attr("y", -50)
                 .attr("fill", "black")
                 .text(yLabel);
-            
-            yKeys.forEach((key, i) => {
-                g.append("path")
-                    .datum(data)
-                    .attr("fill", "none")
-                    .attr("stroke", colors[i])
-                    .attr("stroke-width", 2)
-                    .attr("d", d3.line().x(d => x(d[xKey])).y(d => y(d[key])));
-            });
         }
         
         loadAndProcessData();
