@@ -43,15 +43,20 @@
             const columnNames = rows[0]; // First row contains headers
             const data = rows.slice(1).map(row => row.map(parseFloat)); // Convert to numbers
             
+            // Assuming first half of columns are temperature, second half are activity
+            const midPoint = Math.floor(columnNames.length / 2);
+            const temperatureCols = data.map(row => row.slice(0, midPoint));
+            const activityCols = data.map(row => row.slice(midPoint));
+            
             // Compute average temperature and activity over time
-            const temperatureData = data.map((row, i) => ({
+            const temperatureData = temperatureCols.map((row, i) => ({
                 time: i / 1440, // Convert minutes to days
                 avgTemp: row.reduce((sum, val) => sum + val, 0) / row.length
             }));
             
-            const activityData = data.map((row, i) => ({
+            const activityData = activityCols.map((row, i) => ({
                 time: i / 1440, // Convert minutes to days
-                avgActivity: row.reduce((sum, val) => sum + val, 0) / row.length // Placeholder: Needs real activity values
+                avgActivity: row.reduce((sum, val) => sum + val, 0) / row.length
             }));
             
             createLineChart("#temperatureChart", temperatureData, "time", "avgTemp", "Temperature (°C)", "blue");
