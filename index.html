@@ -45,11 +45,17 @@
             
             // Compute average temperature and activity over time
             const temperatureData = data.map((row, i) => ({
-                time: i, // Assume each row represents a minute
+                time: i / 1440, // Convert minutes to days
                 avgTemp: row.reduce((sum, val) => sum + val, 0) / row.length
             }));
             
+            const activityData = data.map((row, i) => ({
+                time: i / 1440, // Convert minutes to days
+                avgActivity: row.reduce((sum, val) => sum + val, 0) / row.length // Placeholder: Needs real activity values
+            }));
+            
             createLineChart("#temperatureChart", temperatureData, "time", "avgTemp", "Temperature (°C)", "blue");
+            createLineChart("#activityChart", activityData, "time", "avgActivity", "Activity Level", "green");
         }
         
         function createLineChart(svgId, data, xKey, yKey, yLabel, color) {
@@ -69,12 +75,12 @@
             
             g.append("g")
                 .attr("transform", `translate(0,${height})`)
-                .call(d3.axisBottom(x))
+                .call(d3.axisBottom(x).tickFormat(d => `${d} Days`))
                 .append("text")
                 .attr("x", width / 2)
                 .attr("y", 40)
                 .attr("fill", "black")
-                .text("Time (Minutes)");
+                .text("Time (Days)");
             
             g.append("g")
                 .call(d3.axisLeft(y))
