@@ -16,6 +16,17 @@
     <h1>Rhythms of the Night: Analyzing Mouse Activity and Temperature Cycles</h1>
     <p>This project explores the relationship between activity levels and body temperature in mice over a 14-day period.</p>
     
+    <label for="timeRange">Select Time Range:</label>
+    <select id="timeRange" onchange="loadAndProcessData()">
+        <option value="all">All 14 Days</option>
+        <option value="week1">Week 1</option>
+        <option value="week2">Week 2</option>
+        <option value="day1">Day 1</option>
+        <option value="day2">Day 2</option>
+        <option value="day3">Day 3</option>
+        <option value="day4">Day 4</option>
+    </select>
+    
     <h2>Average Temperature Trends</h2>
     <div class="chart-container">
         <svg id="temperatureChart" width="800" height="400"></svg>
@@ -26,66 +37,71 @@
         <svg id="activityChart" width="800" height="400"></svg>
     </div>
     
-    <h2>Project Progress</h2>
-    <p><b>What have you done so far?</b></p>
-    <p>So far, we have structured our webpage, implemented an initial interactive visualization for temperature trends, and laid the foundation for additional visualizations. We are using D3.js to render data dynamically, and the project is being prepared for deployment via GitHub Pages.</p>
-    
-    <p><b>What will be the most challenging part of your project to design and why?</b></p>
-    <p>The most challenging part will be implementing meaningful interactivity that allows users to engage with the data in a useful way. Designing interactive components such as toggling between male and female datasets, hover effects, and comparisons between estrus and non-estrus states will require thoughtful design and testing.</p>
-    
     <script>
-        // Function to load and process the actual dataset
         async function loadAndProcessData() {
-            const response = await fetch('mouse_data.csv'); // Ensure this file is accessible
+            const response = await fetch('mouse_data.csv');
             const text = await response.text();
             const rows = text.trim().split('\n').map(row => row.split(','));
+            const columnNames = rows[0];
+            const data = rows.slice(1).map(row => row.map(parseFloat));
             
-            const columnNames = rows[0]; // First row contains headers
-            const data = rows.slice(1).map(row => row.map(parseFloat)); // Convert to numbers
-            
-            // Assuming first half of columns are temperature, second half are activity
             const midPoint = Math.floor(columnNames.length / 2);
-            const temperatureCols = data.map(row => row.slice(0, midPoint));
-            const activityCols = data.map(row => row.slice(midPoint));
+            const femaleTemperatureCols = data.map(row => row.slice(0, midPoint / 2));
+            const maleTemperatureCols = data.map(row => row.slice(midPoint / 2, midPoint));
+            const femaleActivityCols = data.map(row => row.slice(midPoint, midPoint + midPoint / 2));
+            const maleActivityCols = data.map(row => row.slice(midPoint + midPoint / 2));
             
-            // Compute average temperature and activity over time
-            const temperatureData = temperatureCols.map((row, i) => ({
-                time: i / 1440, // Convert minutes to days
-                avgTemp: row.reduce((sum, val) => sum + val, 0) / row.length
+            const selectedRange = document.getElementById("timeRange").value;
+            let start = 0, end = data.length;
+            let xLabel = "Time (Days)";
+            
+            if (selectedRange.startsWith("week")) {
+                start = selectedRange === "week1" ? 0 : 7 * 1440;
+                end = start + 7 * 1440;
+            } else if (selectedRange.startsWith("day")) {
+                start = (parseInt(selectedRange.replace("day", "")) - 1) * 1440;
+                end = start + 1440;
+                xLabel = "Time (Minutes)";
+            }
+            
+            const temperatureData = femaleTemperatureCols.slice(start, end).map((row, i) => ({
+                time: i / (selectedRange.startsWith("day") ? 1 : 1440),
+                femaleTemp: row.reduce((sum, val) => sum + val, 0) / row.length,
+                maleTemp: maleTemperatureCols[i].reduce((sum, val) => sum + val, 0) / maleTemperatureCols[i].length
             }));
             
-            const activityData = activityCols.map((row, i) => ({
-                time: i / 1440, // Convert minutes to days
-                avgActivity: row.reduce((sum, val) => sum + val, 0) / row.length
+            const activityData = femaleActivityCols.slice(start, end).map((row, i) => ({
+                time: i / (selectedRange.startsWith("day") ? 1 : 1440),
+                femaleActivity: row.reduce((sum, val) => sum + val, 0) / row.length,
+                maleActivity: maleActivityCols[i].reduce((sum, val) => sum + val, 0) / maleActivityCols[i].length
             }));
             
-            createLineChart("#temperatureChart", temperatureData, "time", "avgTemp", "Temperature (°C)", "blue");
-            createLineChart("#activityChart", activityData, "time", "avgActivity", "Activity Level", "green");
+            createLineChart("#temperatureChart", temperatureData, "time", ["femaleTemp", "maleTemp"], "Temperature (°C)", ["blue", "red"], xLabel);
+            createLineChart("#activityChart", activityData, "time", ["femaleActivity", "maleActivity"], "Activity Level", ["green", "orange"], xLabel);
         }
         
-        function createLineChart(svgId, data, xKey, yKey, yLabel, color) {
-            const svg = d3.select(svgId),
+        function createLineChart(svgId, data, xKey, yKeys, yLabel, colors, xLabel) {
+            const svg = d3.select(svgId).html(""),
                   margin = {top: 20, right: 30, bottom: 50, left: 60},
                   width = +svg.attr("width") - margin.left - margin.right,
                   height = +svg.attr("height") - margin.top - margin.bottom;
             
             const x = d3.scaleLinear().domain([0, d3.max(data, d => d[xKey])]).range([0, width]);
-            const y = d3.scaleLinear().domain([d3.min(data, d => d[yKey]) - 1, d3.max(data, d => d[yKey]) + 1]).range([height, 0]);
-            
-            const line = d3.line()
-                .x(d => x(d[xKey]))
-                .y(d => y(d[yKey]));
+            const y = d3.scaleLinear().domain([
+                d3.min(data, d => Math.min(...yKeys.map(k => d[k]))) - 1,
+                d3.max(data, d => Math.max(...yKeys.map(k => d[k]))) + 1
+            ]).range([height, 0]);
             
             const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
             
             g.append("g")
                 .attr("transform", `translate(0,${height})`)
-                .call(d3.axisBottom(x).tickFormat(d => `${d} Days`))
+                .call(d3.axisBottom(x))
                 .append("text")
                 .attr("x", width / 2)
                 .attr("y", 40)
                 .attr("fill", "black")
-                .text("Time (Days)");
+                .text(xLabel);
             
             g.append("g")
                 .call(d3.axisLeft(y))
@@ -96,15 +112,16 @@
                 .attr("fill", "black")
                 .text(yLabel);
             
-            g.append("path")
-                .datum(data)
-                .attr("fill", "none")
-                .attr("stroke", color)
-                .attr("stroke-width", 2)
-                .attr("d", line);
+            yKeys.forEach((key, i) => {
+                g.append("path")
+                    .datum(data)
+                    .attr("fill", "none")
+                    .attr("stroke", colors[i])
+                    .attr("stroke-width", 2)
+                    .attr("d", d3.line().x(d => x(d[xKey])).y(d => y(d[key])));
+            });
         }
         
-        // Load and process the actual dataset on page load
         loadAndProcessData();
     </script>
 </body>
