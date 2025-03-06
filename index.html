@@ -52,16 +52,31 @@
     
     <script>
         async function loadCSV(file) {
-            const response = await fetch(file);
-            const text = await response.text();
-            return text.trim().split('\n').map(row => row.split(',').map(parseFloat));
+            try {
+                const response = await fetch(file);
+                if (!response.ok) {
+                    throw new Error(`Failed to load ${file}: ${response.statusText}`);
+                }
+                const text = await response.text();
+                return text.trim().split('\n').map(row => row.split(',').map(parseFloat));
+            } catch (error) {
+                console.error(error);
+                return [];
+            }
         }
         
         async function loadAndProcessData() {
+            console.log("Loading datasets...");
             const femaleTempData = await loadCSV('data/female_temp.csv');
             const maleTempData = await loadCSV('data/male_temp.csv');
             const femaleActData = await loadCSV('data/female_act.csv');
             const maleActData = await loadCSV('data/male_act.csv');
+            
+            if (!femaleTempData.length || !maleTempData.length || !femaleActData.length || !maleActData.length) {
+                console.error("One or more datasets failed to load.");
+                return;
+            }
+            console.log("Datasets loaded successfully.");
             
             const selectedRange = document.getElementById("timeRange").value;
             let start = 0, end = femaleTempData.length;
@@ -78,15 +93,17 @@
             
             const temperatureData = femaleTempData.slice(start, end).map((row, i) => ({
                 time: i / (selectedRange.startsWith("day") ? 1 : 1440),
-                femaleTemp: row.reduce((sum, val) => sum + val, 0) / row.length,
-                maleTemp: maleTempData[i].reduce((sum, val) => sum + val, 0) / maleTempData[i].length
+                femaleTemp: row.length > 0 ? row.reduce((sum, val) => sum + val, 0) / row.length : null,
+                maleTemp: maleTempData[i] && maleTempData[i].length > 0 ? maleTempData[i].reduce((sum, val) => sum + val, 0) / maleTempData[i].length : null
             }));
             
             const activityData = femaleActData.slice(start, end).map((row, i) => ({
                 time: i / (selectedRange.startsWith("day") ? 1 : 1440),
-                femaleActivity: row.reduce((sum, val) => sum + val, 0) / row.length,
-                maleActivity: maleActData[i].reduce((sum, val) => sum + val, 0) / maleActData[i].length
+                femaleActivity: row.length > 0 ? row.reduce((sum, val) => sum + val, 0) / row.length : null,
+                maleActivity: maleActData[i] && maleActData[i].length > 0 ? maleActData[i].reduce((sum, val) => sum + val, 0) / maleActData[i].length : null
             }));
+            
+            console.log("Processed Data:", { temperatureData, activityData });
             
             createLineChart("#temperatureChart", temperatureData, "time", ["femaleTemp", "maleTemp"], "Temperature (°C)", ["blue", "red"], xLabel);
             createLineChart("#activityChart", activityData, "time", ["femaleActivity", "maleActivity"], "Activity Level", ["green", "orange"], xLabel);
@@ -103,26 +120,6 @@
                 d3.min(data, d => Math.min(...yKeys.map(k => d[k]))) - 1,
                 d3.max(data, d => Math.max(...yKeys.map(k => d[k]))) + 1
             ]).range([height, 0]);
-            
-            const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
-            
-            g.append("g")
-                .attr("transform", `translate(0,${height})`)
-                .call(d3.axisBottom(x))
-                .append("text")
-                .attr("x", width / 2)
-                .attr("y", 40)
-                .attr("fill", "black")
-                .text(xLabel);
-            
-            g.append("g")
-                .call(d3.axisLeft(y))
-                .append("text")
-                .attr("transform", "rotate(-90)")
-                .attr("x", -height / 2)
-                .attr("y", -50)
-                .attr("fill", "black")
-                .text(yLabel);
         }
         
         loadAndProcessData();
