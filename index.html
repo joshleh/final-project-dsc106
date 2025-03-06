@@ -51,21 +51,20 @@
     </div>
     
     <script>
-        async function loadAndProcessData() {
-            const response = await fetch('mouse_data.csv');
+        async function loadCSV(file) {
+            const response = await fetch(file);
             const text = await response.text();
-            const rows = text.trim().split('\n').map(row => row.split(','));
-            const columnNames = rows[0];
-            const data = rows.slice(1).map(row => row.map(parseFloat));
-            
-            const midPoint = Math.floor(columnNames.length / 2);
-            const femaleTemperatureCols = data.map(row => row.slice(0, midPoint / 2));
-            const maleTemperatureCols = data.map(row => row.slice(midPoint / 2, midPoint));
-            const femaleActivityCols = data.map(row => row.slice(midPoint, midPoint + midPoint / 2));
-            const maleActivityCols = data.map(row => row.slice(midPoint + midPoint / 2));
+            return text.trim().split('\n').map(row => row.split(',').map(parseFloat));
+        }
+        
+        async function loadAndProcessData() {
+            const femaleTempData = await loadCSV('data/female_temp.csv');
+            const maleTempData = await loadCSV('data/male_temp.csv');
+            const femaleActData = await loadCSV('data/female_act.csv');
+            const maleActData = await loadCSV('data/male_act.csv');
             
             const selectedRange = document.getElementById("timeRange").value;
-            let start = 0, end = data.length;
+            let start = 0, end = femaleTempData.length;
             let xLabel = "Time (Days)";
             
             if (selectedRange.startsWith("week")) {
@@ -77,16 +76,16 @@
                 xLabel = "Time (Minutes)";
             }
             
-            const temperatureData = femaleTemperatureCols.slice(start, end).map((row, i) => ({
+            const temperatureData = femaleTempData.slice(start, end).map((row, i) => ({
                 time: i / (selectedRange.startsWith("day") ? 1 : 1440),
                 femaleTemp: row.reduce((sum, val) => sum + val, 0) / row.length,
-                maleTemp: maleTemperatureCols[i].reduce((sum, val) => sum + val, 0) / maleTemperatureCols[i].length
+                maleTemp: maleTempData[i].reduce((sum, val) => sum + val, 0) / maleTempData[i].length
             }));
             
-            const activityData = femaleActivityCols.slice(start, end).map((row, i) => ({
+            const activityData = femaleActData.slice(start, end).map((row, i) => ({
                 time: i / (selectedRange.startsWith("day") ? 1 : 1440),
                 femaleActivity: row.reduce((sum, val) => sum + val, 0) / row.length,
-                maleActivity: maleActivityCols[i].reduce((sum, val) => sum + val, 0) / maleActivityCols[i].length
+                maleActivity: maleActData[i].reduce((sum, val) => sum + val, 0) / maleActData[i].length
             }));
             
             createLineChart("#temperatureChart", temperatureData, "time", ["femaleTemp", "maleTemp"], "Temperature (°C)", ["blue", "red"], xLabel);
