@@ -67,10 +67,10 @@
         
         async function loadAndProcessData() {
             console.log("Loading datasets...");
-            const femaleTempData = await loadCSV('data/female_temp.csv');
-            const maleTempData = await loadCSV('data/male_temp.csv');
-            const femaleActData = await loadCSV('data/female_act.csv');
-            const maleActData = await loadCSV('data/male_act.csv');
+            const femaleTempData = await loadCSV('female_temp.csv');
+            const maleTempData = await loadCSV('male_temp.csv');
+            const femaleActData = await loadCSV('female_act.csv');
+            const maleActData = await loadCSV('male_act.csv');
             
             if (!femaleTempData.length || !maleTempData.length || !femaleActData.length || !maleActData.length) {
                 console.error("One or more datasets failed to load.");
