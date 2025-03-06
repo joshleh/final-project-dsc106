@@ -28,6 +28,7 @@ async function loadAndProcessData() {
     const selectedRange = document.getElementById("timeRange").value;
     let start = 0, end = femaleTempData.length;
     let xLabel = "Time (Days)";
+    let timeDivisor = 1440;
 
     if (selectedRange.startsWith("week")) {
         start = selectedRange === "week1" ? 0 : 7 * 1440;
@@ -36,23 +37,24 @@ async function loadAndProcessData() {
         start = (parseInt(selectedRange.replace("day", "")) - 1) * 1440;
         end = start + 1440;
         xLabel = "Time (Minutes)";
+        timeDivisor = 1;
     }
 
-    function filterValidData(dataArray, index) {
+    function filterValidData(dataArray) {
         return dataArray.slice(start, end).map((row, i) => ({
-            time: i / (selectedRange.startsWith("day") ? 1 : 1440),
-            value: row[index]
+            time: i / timeDivisor,
+            value: row[0]  // Assuming data is in the first column
         })).filter(d => !isNaN(d.value));
     }
 
     const temperatureData = {
-        female: filterValidData(femaleTempData, 0),
-        male: filterValidData(maleTempData, 0)
+        female: filterValidData(femaleTempData),
+        male: filterValidData(maleTempData)
     };
 
     const activityData = {
-        female: filterValidData(femaleActData, 0),
-        male: filterValidData(maleActData, 0)
+        female: filterValidData(femaleActData),
+        male: filterValidData(maleActData)
     };
 
     console.log("Processed Data Sample:", temperatureData, activityData);
@@ -71,16 +73,45 @@ function createLineChart(svgId, data, yLabel, xLabel, colors) {
 
     const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
-    const x = d3.scaleLinear().domain([0, 14]).range([0, width]);
+    const x = d3.scaleLinear().domain([0, d3.max([...data.female, ...data.male], d => d.time)]).range([0, width]);
     const y = d3.scaleLinear().domain([
         d3.min([...data.female, ...data.male], d => d.value),
         d3.max([...data.female, ...data.male], d => d.value)
     ]).range([height, 0]);
 
-    g.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x)).append("text")
-        .attr("fill", "black").attr("x", width / 2).attr("y", 40).text(xLabel);
-    g.append("g").call(d3.axisLeft(y)).append("text")
-        .attr("fill", "black").attr("x", -40).attr("y", -10).text(yLabel);
+    g.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x))
+        .append("text")
+        .attr("fill", "black")
+        .attr("x", width / 2)
+        .attr("y", 40)
+        .text(xLabel);
+    
+    g.append("g").call(d3.axisLeft(y))
+        .append("text")
+        .attr("fill", "black")
+        .attr("transform", "rotate(-90)")
+        .attr("y", -50)
+        .attr("x", -height / 2)
+        .attr("text-anchor", "middle")
+        .text(yLabel);
+
+    const line = d3.line()
+        .x(d => x(d.time))
+        .y(d => y(d.value));
+
+    g.append("path")
+        .datum(data.female)
+        .attr("fill", "none")
+        .attr("stroke", colors[0])
+        .attr("stroke-width", 2)
+        .attr("d", line);
+
+    g.append("path")
+        .datum(data.male)
+        .attr("fill", "none")
+        .attr("stroke", colors[1])
+        .attr("stroke-width", 2)
+        .attr("d", line);
 }
 
 document.addEventListener("DOMContentLoaded", loadAndProcessData);
