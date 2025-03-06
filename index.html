@@ -93,17 +93,17 @@
             
             const temperatureData = femaleTempData.slice(start, end).map((row, i) => ({
                 time: i / (selectedRange.startsWith("day") ? 1 : 1440),
-                femaleTemp: row.length > 0 ? row.reduce((sum, val) => sum + val, 0) / row.length : null,
-                maleTemp: maleTempData[i] && maleTempData[i].length > 0 ? maleTempData[i].reduce((sum, val) => sum + val, 0) / maleTempData[i].length : null
+                femaleTemp: row[0],
+                maleTemp: maleTempData[i] ? maleTempData[i][0] : null
             }));
             
             const activityData = femaleActData.slice(start, end).map((row, i) => ({
                 time: i / (selectedRange.startsWith("day") ? 1 : 1440),
-                femaleActivity: row.length > 0 ? row.reduce((sum, val) => sum + val, 0) / row.length : null,
-                maleActivity: maleActData[i] && maleActData[i].length > 0 ? maleActData[i].reduce((sum, val) => sum + val, 0) / maleActData[i].length : null
+                femaleActivity: row[0],
+                maleActivity: maleActData[i] ? maleActData[i][0] : null
             }));
             
-            console.log("Processed Data:", { temperatureData, activityData });
+            console.log("Processed Data Sample:", temperatureData.slice(0, 10), activityData.slice(0, 10));
             
             createLineChart("#temperatureChart", temperatureData, "time", ["femaleTemp", "maleTemp"], "Temperature (°C)", ["blue", "red"], xLabel);
             createLineChart("#activityChart", activityData, "time", ["femaleActivity", "maleActivity"], "Activity Level", ["green", "orange"], xLabel);
