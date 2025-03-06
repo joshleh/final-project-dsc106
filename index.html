@@ -110,16 +110,28 @@
         }
         
         function createLineChart(svgId, data, xKey, yKeys, yLabel, colors, xLabel) {
-            const svg = d3.select(svgId).html(""),
-                  margin = {top: 20, right: 30, bottom: 50, left: 60},
+            const svg = d3.select(svgId);
+            svg.selectAll("*").remove();
+            
+            const margin = {top: 20, right: 30, bottom: 50, left: 60},
                   width = +svg.attr("width") - margin.left - margin.right,
                   height = +svg.attr("height") - margin.top - margin.bottom;
+            
+            const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
             
             const x = d3.scaleLinear().domain([0, d3.max(data, d => d[xKey])]).range([0, width]);
             const y = d3.scaleLinear().domain([
                 d3.min(data, d => Math.min(...yKeys.map(k => d[k]))) - 1,
                 d3.max(data, d => Math.max(...yKeys.map(k => d[k]))) + 1
             ]).range([height, 0]);
+            
+            g.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
+            g.append("g").call(d3.axisLeft(y));
+            
+            yKeys.forEach((key, i) => {
+                const line = d3.line().x(d => x(d[xKey])).y(d => y(d[key]));
+                g.append("path").datum(data).attr("fill", "none").attr("stroke", colors[i]).attr("stroke-width", 1.5).attr("d", line);
+            });
         }
         
         loadAndProcessData();
