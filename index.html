@@ -93,15 +93,15 @@
             
             const temperatureData = femaleTempData.slice(start, end).map((row, i) => ({
                 time: i / (selectedRange.startsWith("day") ? 1 : 1440),
-                femaleTemp: row[0],
-                maleTemp: maleTempData[i] ? maleTempData[i][0] : null
-            }));
+                femaleTemp: isNaN(row[0]) ? null : row[0],
+                maleTemp: maleTempData[i] && !isNaN(maleTempData[i][0]) ? maleTempData[i][0] : null
+            })).filter(d => d.femaleTemp !== null && d.maleTemp !== null);
             
             const activityData = femaleActData.slice(start, end).map((row, i) => ({
                 time: i / (selectedRange.startsWith("day") ? 1 : 1440),
-                femaleActivity: row[0],
-                maleActivity: maleActData[i] ? maleActData[i][0] : null
-            }));
+                femaleActivity: isNaN(row[0]) ? null : row[0],
+                maleActivity: maleActData[i] && !isNaN(maleActData[i][0]) ? maleActData[i][0] : null
+            })).filter(d => d.femaleActivity !== null && d.maleActivity !== null);
             
             console.log("Processed Data Sample:", temperatureData.slice(0, 10), activityData.slice(0, 10));
             
@@ -121,17 +121,12 @@
             
             const x = d3.scaleLinear().domain([0, d3.max(data, d => d[xKey])]).range([0, width]);
             const y = d3.scaleLinear().domain([
-                d3.min(data, d => Math.min(...yKeys.map(k => d[k]))) - 1,
-                d3.max(data, d => Math.max(...yKeys.map(k => d[k]))) + 1
+                d3.min(data, d => Math.min(...yKeys.map(k => d[k]))),
+                d3.max(data, d => Math.max(...yKeys.map(k => d[k])))
             ]).range([height, 0]);
             
             g.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
             g.append("g").call(d3.axisLeft(y));
-            
-            yKeys.forEach((key, i) => {
-                const line = d3.line().x(d => x(d[xKey])).y(d => y(d[key]));
-                g.append("path").datum(data).attr("fill", "none").attr("stroke", colors[i]).attr("stroke-width", 1.5).attr("d", line);
-            });
         }
         
         loadAndProcessData();
