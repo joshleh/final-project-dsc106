@@ -53,7 +53,7 @@
     <script>
         async function loadCSV(file) {
             try {
-                const response = await fetch(file);
+                const response = await fetch(`data/${file}`);
                 if (!response.ok) {
                     throw new Error(`Failed to load ${file}: ${response.statusText}`);
                 }
@@ -91,42 +91,49 @@
                 xLabel = "Time (Minutes)";
             }
             
-            const temperatureData = femaleTempData.slice(start, end).map((row, i) => ({
-                time: i / (selectedRange.startsWith("day") ? 1 : 1440),
-                femaleTemp: isNaN(row[0]) ? null : row[0],
-                maleTemp: maleTempData[i] && !isNaN(maleTempData[i][0]) ? maleTempData[i][0] : null
-            })).filter(d => d.femaleTemp !== null && d.maleTemp !== null);
+            function filterValidData(dataArray, index) {
+                return dataArray.slice(start, end).map((row, i) => ({
+                    time: i / (selectedRange.startsWith("day") ? 1 : 1440),
+                    value: row[index]
+                })).filter(d => !isNaN(d.value));
+            }
             
-            const activityData = femaleActData.slice(start, end).map((row, i) => ({
-                time: i / (selectedRange.startsWith("day") ? 1 : 1440),
-                femaleActivity: isNaN(row[0]) ? null : row[0],
-                maleActivity: maleActData[i] && !isNaN(maleActData[i][0]) ? maleActData[i][0] : null
-            })).filter(d => d.femaleActivity !== null && d.maleActivity !== null);
+            const temperatureData = {
+                female: filterValidData(femaleTempData, 0),
+                male: filterValidData(maleTempData, 0)
+            };
             
-            console.log("Processed Data Sample:", temperatureData.slice(0, 10), activityData.slice(0, 10));
+            const activityData = {
+                female: filterValidData(femaleActData, 0),
+                male: filterValidData(maleActData, 0)
+            };
             
-            createLineChart("#temperatureChart", temperatureData, "time", ["femaleTemp", "maleTemp"], "Temperature (°C)", ["blue", "red"], xLabel);
-            createLineChart("#activityChart", activityData, "time", ["femaleActivity", "maleActivity"], "Activity Level", ["green", "orange"], xLabel);
+            console.log("Processed Data Sample:", temperatureData, activityData);
+            
+            createLineChart("#temperatureChart", temperatureData, "Temperature (°C)", xLabel, ["blue", "red"]);
+            createLineChart("#activityChart", activityData, "Activity Level", xLabel, ["green", "orange"]);
         }
         
-        function createLineChart(svgId, data, xKey, yKeys, yLabel, colors, xLabel) {
+        function createLineChart(svgId, data, yLabel, xLabel, colors) {
             const svg = d3.select(svgId);
             svg.selectAll("*").remove();
             
-            const margin = {top: 20, right: 30, bottom: 50, left: 60},
+            const margin = {top: 20, right: 50, bottom: 50, left: 70},
                   width = +svg.attr("width") - margin.left - margin.right,
                   height = +svg.attr("height") - margin.top - margin.bottom;
             
             const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
             
-            const x = d3.scaleLinear().domain([0, d3.max(data, d => d[xKey])]).range([0, width]);
+            const x = d3.scaleLinear().domain([0, 14]).range([0, width]);
             const y = d3.scaleLinear().domain([
-                d3.min(data, d => Math.min(...yKeys.map(k => d[k]))),
-                d3.max(data, d => Math.max(...yKeys.map(k => d[k])))
+                d3.min([...data.female, ...data.male], d => d.value),
+                d3.max([...data.female, ...data.male], d => d.value)
             ]).range([height, 0]);
             
-            g.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
-            g.append("g").call(d3.axisLeft(y));
+            g.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x)).append("text")
+                .attr("fill", "black").attr("x", width / 2).attr("y", 40).text(xLabel);
+            g.append("g").call(d3.axisLeft(y)).append("text")
+                .attr("fill", "black").attr("x", -40).attr("y", -10).text(yLabel);
         }
         
         loadAndProcessData();
