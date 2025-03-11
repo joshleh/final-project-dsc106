@@ -43,7 +43,7 @@ async function loadAndProcessData() {
     function filterValidData(dataArray) {
         return dataArray.slice(start, end).map((row, i) => ({
             time: i / timeDivisor,
-            value: row[0]
+            value: row[0]  // Assuming data is in the first column
         })).filter(d => !isNaN(d.value));
     }
 
@@ -61,8 +61,6 @@ async function loadAndProcessData() {
 
     createLineChart("#temperatureChart", temperatureData, "Temperature (°C)", xLabel, ["blue", "red"]);
     createLineChart("#activityChart", activityData, "Activity Level", xLabel, ["green", "orange"]);
-    createHeatmap("#temperatureHeatmap", temperatureData, "Temperature Heatmap");
-    createHeatmap("#activityHeatmap", activityData, "Activity Heatmap");
 }
 
 function createLineChart(svgId, data, yLabel, xLabel, colors) {
@@ -81,32 +79,39 @@ function createLineChart(svgId, data, yLabel, xLabel, colors) {
         d3.max([...data.female, ...data.male], d => d.value)
     ]).range([height, 0]);
 
-    const line = d3.line().x(d => x(d.time)).y(d => y(d.value));
+    g.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x))
+        .append("text")
+        .attr("fill", "black")
+        .attr("x", width / 2)
+        .attr("y", 40)
+        .text(xLabel);
+    
+    g.append("g").call(d3.axisLeft(y))
+        .append("text")
+        .attr("fill", "black")
+        .attr("transform", "rotate(-90)")
+        .attr("y", -50)
+        .attr("x", -height / 2)
+        .attr("text-anchor", "middle")
+        .text(yLabel);
 
-    g.append("path").datum(data.female).attr("fill", "none").attr("stroke", colors[0]).attr("stroke-width", 2).attr("d", line);
-    g.append("path").datum(data.male).attr("fill", "none").attr("stroke", colors[1]).attr("stroke-width", 2).attr("d", line);
-}
+    const line = d3.line()
+        .x(d => x(d.time))
+        .y(d => y(d.value));
 
-function createHeatmap(svgId, data, title) {
-    const svg = d3.select(svgId);
-    svg.selectAll("*").remove();
+    g.append("path")
+        .datum(data.female)
+        .attr("fill", "none")
+        .attr("stroke", colors[0])
+        .attr("stroke-width", 2)
+        .attr("d", line);
 
-    const width = +svg.attr("width");
-    const height = +svg.attr("height");
-
-    const heatmapData = [...data.female, ...data.male];
-
-    const xScale = d3.scaleLinear().domain([0, d3.max(heatmapData, d => d.time)]).range([0, width]);
-    const yScale = d3.scaleLinear().domain([d3.min(heatmapData, d => d.value), d3.max(heatmapData, d => d.value)]).range([height, 0]);
-
-    svg.selectAll("rect")
-        .data(heatmapData)
-        .enter().append("rect")
-        .attr("x", d => xScale(d.time))
-        .attr("y", d => yScale(d.value))
-        .attr("width", width / heatmapData.length)
-        .attr("height", height / heatmapData.length)
-        .attr("fill", d => d3.interpolateWarm(d.value / d3.max(heatmapData, d => d.value)));
+    g.append("path")
+        .datum(data.male)
+        .attr("fill", "none")
+        .attr("stroke", colors[1])
+        .attr("stroke-width", 2)
+        .attr("d", line);
 }
 
 document.addEventListener("DOMContentLoaded", loadAndProcessData);

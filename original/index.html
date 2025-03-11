@@ -32,28 +32,24 @@
         <option value="day14">Day 14</option>
     </select>
     
-    <div class="chart-row">
-        <div class="chart-container">
-            <h2>Average Temperature Trends</h2>
-            <svg id="temperatureChart" width="400" height="400"></svg>
-        </div>
-        <div class="chart-container">
-            <h2>Temperature Heatmap</h2>
-            <svg id="temperatureHeatmap" width="400" height="400"></svg>
+    <h2>Average Temperature Trends</h2>
+    <div class="chart-container">
+        <svg id="temperatureChart" width="800" height="400"></svg>
+        <div class="legend">
+            <span style="color: blue;">■ Female</span>
+            <span style="color: red;">■ Male</span>
         </div>
     </div>
-
-    <div class="chart-row">
-        <div class="chart-container">
-            <h2>Activity Trends Over Time</h2>
-            <svg id="activityChart" width="400" height="400"></svg>
-        </div>
-        <div class="chart-container">
-            <h2>Activity Heatmap</h2>
-            <svg id="activityHeatmap" width="400" height="400"></svg>
+    
+    <h2>Activity Trends Over Time</h2>
+    <div class="chart-container">
+        <svg id="activityChart" width="800" height="400"></svg>
+        <div class="legend">
+            <span style="color: green;">■ Female</span>
+            <span style="color: orange;">■ Male</span>
         </div>
     </div>
-
+    
     <script src="script.js"></script>
 </body>
 </html>
