@@ -1,117 +1,98 @@
-async function loadCSV(file) {
-    try {
-        const response = await fetch(`data/${file}`);
-        if (!response.ok) {
-            throw new Error(`Failed to load ${file}: ${response.statusText}`);
-        }
-        const text = await response.text();
-        return text.trim().split('\n').map(row => row.split(',').map(parseFloat));
-    } catch (error) {
-        console.error(error);
-        return [];
-    }
-}
-
-async function loadAndProcessData() {
+document.addEventListener("DOMContentLoaded", function () {
     console.log("Loading datasets...");
-    const femaleTempData = await loadCSV('female_temp.csv');
-    const maleTempData = await loadCSV('male_temp.csv');
-    const femaleActData = await loadCSV('female_act.csv');
-    const maleActData = await loadCSV('male_act.csv');
 
-    if (!femaleTempData.length || !maleTempData.length || !femaleActData.length || !maleActData.length) {
-        console.error("One or more datasets failed to load.");
-        return;
-    }
-    console.log("Datasets loaded successfully.");
+    Promise.all([
+        d3.csv("data/female_temp.csv"),
+        d3.csv("data/male_temp.csv"),
+        d3.csv("data/female_act.csv"),
+        d3.csv("data/male_act.csv")
+    ]).then(function (files) {
+        console.log("Datasets loaded successfully.");
+        processAndRenderData(files);
+    }).catch(function (error) {
+        console.error("Error loading datasets:", error);
+    });
 
-    const selectedRange = document.getElementById("timeRange").value;
-    let start = 0, end = femaleTempData.length;
-    let xLabel = "Time (Days)";
-    let timeDivisor = 1440;
+    function processAndRenderData(files) {
+        let femaleTemp = files[0].map(d => ({ time: +d.time, value: +d.temperature }));
+        let maleTemp = files[1].map(d => ({ time: +d.time, value: +d.temperature }));
+        let femaleAct = files[2].map(d => ({ time: +d.time, value: +d.activity }));
+        let maleAct = files[3].map(d => ({ time: +d.time, value: +d.activity }));
 
-    if (selectedRange.startsWith("week")) {
-        start = selectedRange === "week1" ? 0 : 7 * 1440;
-        end = start + 7 * 1440;
-    } else if (selectedRange.startsWith("day")) {
-        start = (parseInt(selectedRange.replace("day", "")) - 1) * 1440;
-        end = start + 1440;
-        xLabel = "Time (Minutes)";
-        timeDivisor = 1;
-    }
-
-    function filterValidData(dataArray) {
-        return dataArray.slice(start, end).map((row, i) => ({
-            time: i / timeDivisor,
-            value: row[0]  // Assuming data is in the first column
-        })).filter(d => !isNaN(d.value));
+        console.log("Processed Data Sample:", { femaleTemp, maleTemp, femaleAct, maleAct });
+        
+        createLineChart("#temp-chart", femaleTemp, maleTemp, "Temperature (°C)");
+        createLineChart("#activity-chart", femaleAct, maleAct, "Activity Level");
     }
 
-    const temperatureData = {
-        female: filterValidData(femaleTempData),
-        male: filterValidData(maleTempData)
-    };
+    function createLineChart(container, femaleData, maleData, yAxisLabel) {
+        const width = 800, height = 400;
 
-    const activityData = {
-        female: filterValidData(femaleActData),
-        male: filterValidData(maleActData)
-    };
+        const svg = d3.select(container)
+            .append("svg")
+            .attr("width", width)
+            .attr("height", height);
 
-    console.log("Processed Data Sample:", temperatureData, activityData);
+        const margin = { top: 20, right: 50, bottom: 50, left: 70 },
+            graphWidth = width - margin.left - margin.right,
+            graphHeight = height - margin.top - margin.bottom;
 
-    createLineChart("#temperatureChart", temperatureData, "Temperature (°C)", xLabel, ["blue", "red"]);
-    createLineChart("#activityChart", activityData, "Activity Level", xLabel, ["green", "orange"]);
-}
+        const g = svg.append("g")
+            .attr("transform", `translate(${margin.left}, ${margin.top})`);
 
-function createLineChart(svgId, data, yLabel, xLabel, colors) {
-    const svg = d3.select(svgId);
-    svg.selectAll("*").remove();
+        const xScale = d3.scaleLinear()
+            .domain(d3.extent(femaleData, d => d.time))
+            .range([0, graphWidth]);
 
-    const margin = {top: 20, right: 50, bottom: 50, left: 70},
-          width = +svg.attr("width") - margin.left - margin.right,
-          height = +svg.attr("height") - margin.top - margin.bottom;
+        const yScale = d3.scaleLinear()
+            .domain([
+                d3.min([...femaleData, ...maleData], d => d.value),
+                d3.max([...femaleData, ...maleData], d => d.value)
+            ])
+            .range([graphHeight, 0]);
 
-    const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+        const xAxis = d3.axisBottom(xScale).ticks(10);
+        const yAxis = d3.axisLeft(yScale).ticks(6);
 
-    const x = d3.scaleLinear().domain([0, d3.max([...data.female, ...data.male], d => d.time)]).range([0, width]);
-    const y = d3.scaleLinear().domain([
-        d3.min([...data.female, ...data.male], d => d.value),
-        d3.max([...data.female, ...data.male], d => d.value)
-    ]).range([height, 0]);
+        g.append("g")
+            .attr("transform", `translate(0, ${graphHeight})`)
+            .call(xAxis);
 
-    g.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x))
-        .append("text")
-        .attr("fill", "black")
-        .attr("x", width / 2)
-        .attr("y", 40)
-        .text(xLabel);
-    
-    g.append("g").call(d3.axisLeft(y))
-        .append("text")
-        .attr("fill", "black")
-        .attr("transform", "rotate(-90)")
-        .attr("y", -50)
-        .attr("x", -height / 2)
-        .attr("text-anchor", "middle")
-        .text(yLabel);
+        g.append("g")
+            .call(yAxis);
 
-    const line = d3.line()
-        .x(d => x(d.time))
-        .y(d => y(d.value));
+        g.append("text")
+            .attr("transform", "rotate(-90)")
+            .attr("y", -50)
+            .attr("x", -graphHeight / 2)
+            .attr("dy", "1em")
+            .attr("text-anchor", "middle")
+            .attr("class", "axis-label")
+            .text(yAxisLabel);
 
-    g.append("path")
-        .datum(data.female)
-        .attr("fill", "none")
-        .attr("stroke", colors[0])
-        .attr("stroke-width", 2)
-        .attr("d", line);
+        const line = d3.line()
+            .x(d => xScale(d.time))
+            .y(d => yScale(d.value));
 
-    g.append("path")
-        .datum(data.male)
-        .attr("fill", "none")
-        .attr("stroke", colors[1])
-        .attr("stroke-width", 2)
-        .attr("d", line);
-}
+        g.append("path")
+            .datum(femaleData)
+            .attr("fill", "none")
+            .attr("stroke", "blue")
+            .attr("stroke-width", 2)
+            .attr("d", line);
 
-document.addEventListener("DOMContentLoaded", loadAndProcessData);
+        g.append("path")
+            .datum(maleData)
+            .attr("fill", "none")
+            .attr("stroke", "red")
+            .attr("stroke-width", 2)
+            .attr("d", line);
+
+        g.append("text")
+            .attr("x", graphWidth / 2)
+            .attr("y", graphHeight + margin.bottom - 10)
+            .attr("text-anchor", "middle")
+            .attr("class", "axis-label")
+            .text("Time (Days)");
+    }
+});

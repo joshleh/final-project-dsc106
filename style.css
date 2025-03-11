@@ -34,3 +34,16 @@ select {
     padding: 5px;
     font-size: 14px;
 }
+
+svg {
+    overflow: visible;
+}
+
+g text {
+    font-size: 12px;
+}
+
+g.axis-label {
+    font-size: 14px;
+    font-weight: bold;
+}
