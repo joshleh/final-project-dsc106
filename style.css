@@ -82,3 +82,27 @@ svg {
 .daytime {
     background-color: white;
 }
+
+#sidebar {
+    width: 0;
+    position: fixed;
+    top: 0;
+    left: 0;
+    height: 100%;
+    background: white;
+    overflow-x: hidden;
+    transition: 0.5s;
+    padding: 20px;
+    box-shadow: 2px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
+#sidebar.open {
+    width: 300px;
+}
+
+#backgroundBtn {
+    margin-left: 10px;
+    padding: 5px 10px;
+    font-size: 14px;
+    cursor: pointer;
+}

@@ -127,38 +127,34 @@ function createHeatmap(svgId, data) {
 
     if (dataPoints.length === 0) return;
 
-    const sampleSize = Math.max(500, Math.floor(dataPoints.length / 10)); // Downsampling to improve performance
-    const sampledData = dataPoints.filter((_, i) => i % sampleSize === 0);
-
-    const xScale = d3.scaleLinear().domain([0, d3.max(sampledData, d => d.time)]).range([0, width]);
-    const yScale = d3.scaleLinear().domain([d3.min(sampledData, d => d.value), d3.max(sampledData, d => d.value)]).range([height, 0]);
-
-    svg.selectAll("rect")
-        .data(sampledData)
-        .enter()
-        .append("rect")
-        .attr("x", d => xScale(d.time))
-        .attr("y", d => yScale(d.value))
-        .attr("width", 3)
-        .attr("height", 3)
-        .attr("fill", d => d.change > 0 ? "red" : "blue"); // Red for increasing, blue for decreasing
+    const xScale = d3.scaleLinear().domain([0, d3.max(dataPoints, d => d.time)]).range([0, width]);
+    const yScale = d3.scaleLinear().domain([d3.min(dataPoints, d => d.value), d3.max(dataPoints, d => d.value)]).range([height, 0]);
 
     // Nighttime background
-    const nightBlocks = [];
-    for (let i = 0; i < 24; i += 2) { // Assuming nighttime every 12 hours
-        nightBlocks.push({ start: i, end: i + 1 });
+    for (let i = 0; i < 14 * 24; i += 24) {
+        svg.append("rect")
+            .attr("x", xScale(i / 24))
+            .attr("width", xScale((i + 12) / 24) - xScale(i / 24))
+            .attr("y", 0)
+            .attr("height", height)
+            .attr("fill", "grey")
+            .attr("opacity", 0.2);
     }
 
-    svg.selectAll(".night-block")
-        .data(nightBlocks)
+    // Data points
+    svg.selectAll("circle")
+        .data(dataPoints)
         .enter()
-        .append("rect")
-        .attr("x", d => xScale(d.start))
-        .attr("width", xScale(d.end) - xScale(d.start))
-        .attr("y", 0)
-        .attr("height", height)
-        .attr("fill", "grey")
-        .attr("opacity", 0.2);
+        .append("circle")
+        .attr("cx", d => xScale(d.time))
+        .attr("cy", d => yScale(d.value))
+        .attr("r", 2)
+        .attr("fill", d => d.change > 0 ? "red" : "blue");
+}
+
+// Sidebar Toggle for Background Info
+function toggleSidebar() {
+    document.getElementById("sidebar").classList.toggle("open");
 }
 
 document.addEventListener("DOMContentLoaded", loadAndProcessData);
