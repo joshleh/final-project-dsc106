@@ -43,25 +43,17 @@ function updateCharts(data) {
 }
 
 function determineTimeLimit(range) {
-    switch (range) {
-        case "all": return 20160;
-        case "week1": return 10080;
-        case "week2": return 20160;
-        case "day1": return 1440;
-        case "day2": return 2880;
-        case "day3": return 4320;
-        case "day4": return 5760;
-        case "day5": return 7200;
-        case "day6": return 8640;
-        case "day7": return 10080;
-        case "day8": return 11520;
-        case "day9": return 12960;
-        case "day10": return 14400;
-        case "day11": return 15840;
-        case "day12": return 17280;
-        case "day13": return 18720;
-        case "day14": return 20160;
-        default: return 20160;
+    const dayLength = 1440;
+    const weekLength = dayLength * 7;
+    
+    if (range.startsWith("day")) {
+        return parseInt(range.replace("day", "")) * dayLength;
+    } else if (range === "week1") {
+        return weekLength;
+    } else if (range === "week2") {
+        return weekLength * 2;
+    } else {
+        return 20160;
     }
 }
 
