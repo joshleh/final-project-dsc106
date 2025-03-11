@@ -95,5 +95,11 @@ function createLineChart(svgSelector, femaleData, maleData, yAxisLabel, xAxisLab
 
 function toggleEstrusCycle(data) {
     console.log("Toggling Estrus Cycle...");
-    alert("Estrus Cycle toggle not implemented yet.");
+    let filteredData = {
+        femaleTemp: data.femaleTemp.filter((_, i) => i % 5760 >= 2880), // Only show estrus days
+        maleTemp: data.maleTemp.filter((_, i) => i % 5760 >= 2880),
+        femaleAct: data.femaleAct.filter((_, i) => i % 5760 >= 2880),
+        maleAct: data.maleAct.filter((_, i) => i % 5760 >= 2880),
+    };
+    updateCharts(filteredData);
 }
