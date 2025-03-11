@@ -17,6 +17,7 @@ document.addEventListener("DOMContentLoaded", function () {
         };
 
         console.log("Processed Data Sample:", processedData);
+
         updateCharts(processedData);
 
         document.getElementById("timeRange").addEventListener("change", function () {
@@ -28,6 +29,8 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }).catch(error => console.error("Error loading data:", error));
 });
+
+let estrusMode = false;
 
 function updateCharts(data) {
     let timeRange = document.getElementById("timeRange").value;
@@ -58,7 +61,7 @@ function determineTimeLimit(range) {
 }
 
 function createLineChart(svgSelector, femaleData, maleData, yAxisLabel, xAxisLabel) {
-    let svg = d3.select(svgSelector).attr("width", 850).attr("height", 300);
+    let svg = d3.select(svgSelector);
     svg.selectAll("*").remove();
 
     let margin = { top: 20, right: 30, bottom: 50, left: 50 },
@@ -81,17 +84,26 @@ function createLineChart(svgSelector, femaleData, maleData, yAxisLabel, xAxisLab
     g.append("path").datum(femaleData).attr("fill", "none").attr("stroke", "blue").attr("stroke-width", 2).attr("d", lineFemale);
     g.append("path").datum(maleData).attr("fill", "none").attr("stroke", "red").attr("stroke-width", 2).attr("d", lineMale);
 
+    g.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
+    g.append("g").call(d3.axisLeft(y));
+
     g.append("text").attr("x", width / 2).attr("y", height + 40).attr("class", "axis-label").text(xAxisLabel);
     g.append("text").attr("transform", "rotate(-90)").attr("x", -height / 2).attr("y", -40).attr("class", "axis-label").text(yAxisLabel);
 }
 
 function toggleEstrusCycle(data) {
+    estrusMode = !estrusMode;
     console.log("Toggling Estrus Cycle...");
-    let filteredData = {
-        femaleTemp: data.femaleTemp.filter((_, i) => i % 5760 >= 2880), // Only show estrus days
-        maleTemp: data.maleTemp.filter((_, i) => i % 5760 >= 2880),
-        femaleAct: data.femaleAct.filter((_, i) => i % 5760 >= 2880),
-        maleAct: data.maleAct.filter((_, i) => i % 5760 >= 2880),
-    };
-    updateCharts(filteredData);
+
+    if (estrusMode) {
+        let filteredData = {
+            femaleTemp: data.femaleTemp.filter((_, i) => i % 5760 >= 2880), // Only estrus days
+            maleTemp: data.maleTemp.filter((_, i) => i % 5760 >= 2880),
+            femaleAct: data.femaleAct.filter((_, i) => i % 5760 >= 2880),
+            maleAct: data.maleAct.filter((_, i) => i % 5760 >= 2880),
+        };
+        updateCharts(filteredData);
+    } else {
+        updateCharts(data);
+    }
 }
