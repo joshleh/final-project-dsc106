@@ -48,6 +48,7 @@ p {
     border-radius: 8px;
     padding: 20px;
     width: 650px;
+    position: relative;
 }
 
 svg {
@@ -60,7 +61,24 @@ svg {
     font-size: 14px;
 }
 
-select {
-    padding: 5px;
-    font-size: 14px;
+.legend-box {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-top: 10px;
+}
+
+.legend-box div {
+    width: 20px;
+    height: 20px;
+    display: inline-block;
+}
+
+.nighttime {
+    background-color: grey;
+}
+
+.daytime {
+    background-color: white;
 }

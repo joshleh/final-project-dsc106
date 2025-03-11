@@ -46,7 +46,8 @@ async function loadAndProcessData() {
     function filterValidData(dataArray) {
         return dataArray.slice(start, end).map((row, i) => ({
             time: i / timeDivisor,
-            value: row[0]
+            value: row[0],
+            change: i > 0 ? row[0] - dataArray[i - 1][0] : 0
         })).filter(d => !isNaN(d.value));
     }
 
@@ -66,53 +67,6 @@ async function loadAndProcessData() {
     createLineChart("#activityChart", activityData, "Activity Level", xLabel, ["green", "orange"]);
     createHeatmap("#temperatureHeatmap", temperatureData);
     createHeatmap("#activityHeatmap", activityData);
-}
-
-function createLineChart(svgId, data, yLabel, xLabel, colors) {
-    const svg = d3.select(svgId);
-    svg.selectAll("*").remove();
-
-    const margin = { top: 40, right: 70, bottom: 50, left: 80 },
-          width = +svg.attr("width") - margin.left - margin.right,
-          height = +svg.attr("height") - margin.top - margin.bottom;
-
-    const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
-
-    const x = d3.scaleLinear()
-        .domain([0, d3.max([...data.female || [], ...data.male || []], d => d.time)])
-        .range([0, width]);
-
-    const y = d3.scaleLinear()
-        .domain([
-            d3.min([...data.female || [], ...data.male || []], d => d.value),
-            d3.max([...data.female || [], ...data.male || []], d => d.value)
-        ])
-        .range([height, 0]);
-
-    g.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
-    g.append("g").call(d3.axisLeft(y));
-
-    const line = d3.line()
-        .x(d => x(d.time))
-        .y(d => y(d.value));
-
-    if (data.female) {
-        g.append("path")
-            .datum(data.female)
-            .attr("fill", "none")
-            .attr("stroke", colors[0])
-            .attr("stroke-width", 2)
-            .attr("d", line);
-    }
-
-    if (data.male) {
-        g.append("path")
-            .datum(data.male)
-            .attr("fill", "none")
-            .attr("stroke", colors[1])
-            .attr("stroke-width", 2)
-            .attr("d", line);
-    }
 }
 
 function createHeatmap(svgId, data) {
@@ -140,7 +94,24 @@ function createHeatmap(svgId, data) {
         .attr("y", d => yScale(d.value))
         .attr("width", 3)
         .attr("height", 3)
-        .attr("fill", d => d3.interpolateWarm(d.value / d3.max(sampledData, d => d.value)));
+        .attr("fill", d => d.change > 0 ? "red" : "blue"); // Red for increasing, blue for decreasing
+
+    // Nighttime background
+    const nightBlocks = [];
+    for (let i = 0; i < 24; i += 2) { // Assuming nighttime every 12 hours
+        nightBlocks.push({ start: i, end: i + 1 });
+    }
+
+    svg.selectAll(".night-block")
+        .data(nightBlocks)
+        .enter()
+        .append("rect")
+        .attr("x", d => xScale(d.start))
+        .attr("width", xScale(d.end) - xScale(d.start))
+        .attr("y", 0)
+        .attr("height", height)
+        .attr("fill", "grey")
+        .attr("opacity", 0.2);
 }
 
 document.addEventListener("DOMContentLoaded", loadAndProcessData);
