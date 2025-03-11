@@ -24,37 +24,3 @@ h2 {
     border-radius: 8px;
     width: 850px;
 }
-
-.legend {
-    margin-top: 10px;
-    font-size: 14px;
-}
-
-select, button {
-    padding: 5px;
-    font-size: 14px;
-    margin: 5px;
-}
-
-svg {
-    overflow: visible;
-}
-
-g text {
-    font-size: 12px;
-}
-
-g.axis-label {
-    font-size: 14px;
-    font-weight: bold;
-}
-
-rect.female {
-    stroke: none;
-    opacity: 0.8;
-}
-
-rect.male {
-    stroke: none;
-    opacity: 0.8;
-}
