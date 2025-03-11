@@ -3,16 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mouse Activity & Temperature Analysis</title>
-    <script src="https://d3js.org/d3.v6.min.js"></script>
+    <title>Mouse Activity & Temperature</title>
     <link rel="stylesheet" href="style.css">
+    <script src="https://d3js.org/d3.v6.min.js"></script>
 </head>
 <body>
     <h1>Rhythms of the Night: Analyzing Mouse Activity and Temperature Cycles</h1>
     <p>This project explores the relationship between activity levels and body temperature in mice over a 14-day period.</p>
     
     <label for="timeRange">Select Time Range:</label>
-    <select id="timeRange" onchange="loadAndProcessData()">
+    <select id="timeRange">
         <option value="all">All 14 Days</option>
         <option value="week1">Week 1</option>
         <option value="week2">Week 2</option>
@@ -32,24 +32,20 @@
         <option value="day14">Day 14</option>
     </select>
     
+    <button id="toggleEstrus">Toggle Estrus Cycle</button>
+    
     <h2>Average Temperature Trends</h2>
     <div class="chart-container">
-        <svg id="temperatureChart" width="800" height="400"></svg>
-        <div class="legend">
-            <span style="color: blue;">■ Female</span>
-            <span style="color: red;">■ Male</span>
-        </div>
+        <svg id="temperatureChart"></svg>
+        <p><span style="color:blue;">■ Female</span> <span style="color:red;">■ Male</span></p>
     </div>
-    
+
     <h2>Activity Trends Over Time</h2>
     <div class="chart-container">
-        <svg id="activityChart" width="800" height="400"></svg>
-        <div class="legend">
-            <span style="color: green;">■ Female</span>
-            <span style="color: orange;">■ Male</span>
-        </div>
+        <svg id="activityChart"></svg>
+        <p><span style="color:green;">■ Female</span> <span style="color:orange;">■ Male</span></p>
     </div>
-    
+
     <script src="script.js"></script>
 </body>
 </html>

@@ -25,12 +25,7 @@ h2 {
     width: 850px;
 }
 
-.legend {
-    margin-top: 10px;
+.axis-label {
     font-size: 14px;
-}
-
-select {
-    padding: 5px;
-    font-size: 14px;
+    font-weight: bold;
 }
