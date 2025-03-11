@@ -23,9 +23,12 @@ async function loadAndProcessData() {
         console.error("One or more datasets failed to load.");
         return;
     }
+
     console.log("Datasets loaded successfully.");
 
     const selectedRange = document.getElementById("timeRange").value;
+    const selectedGender = document.getElementById("genderFilter").value;
+
     let start = 0, end = femaleTempData.length;
     let xLabel = "Time (Days)";
     let timeDivisor = 1440;
@@ -47,47 +50,22 @@ async function loadAndProcessData() {
         })).filter(d => !isNaN(d.value));
     }
 
-    const temperatureData = {
-        female: filterValidData(femaleTempData),
-        male: filterValidData(maleTempData)
-    };
+    let temperatureData = {};
+    let activityData = {};
 
-    const activityData = {
-        female: filterValidData(femaleActData),
-        male: filterValidData(maleActData)
-    };
-
-    console.log("Processed Data Sample:", temperatureData, activityData);
+    if (selectedGender === "both" || selectedGender === "female") {
+        temperatureData.female = filterValidData(femaleTempData);
+        activityData.female = filterValidData(femaleActData);
+    }
+    if (selectedGender === "both" || selectedGender === "male") {
+        temperatureData.male = filterValidData(maleTempData);
+        activityData.male = filterValidData(maleActData);
+    }
 
     createLineChart("#temperatureChart", temperatureData, "Temperature (°C)", xLabel, ["blue", "red"]);
     createLineChart("#activityChart", activityData, "Activity Level", xLabel, ["green", "orange"]);
     createHeatmap("#temperatureHeatmap", temperatureData);
     createHeatmap("#activityHeatmap", activityData);
-}
-
-function createLineChart(svgId, data, yLabel, xLabel, colors) {
-    const svg = d3.select(svgId);
-    svg.selectAll("*").remove();
-
-    const margin = {top: 40, right: 70, bottom: 50, left: 80},
-          width = +svg.attr("width") - margin.left - margin.right,
-          height = +svg.attr("height") - margin.top - margin.bottom;
-
-    const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
-
-    const x = d3.scaleLinear().domain([0, d3.max([...data.female, ...data.male], d => d.time)]).range([0, width]);
-    const y = d3.scaleLinear().domain([
-        d3.min([...data.female, ...data.male], d => d.value),
-        d3.max([...data.female, ...data.male], d => d.value)
-    ]).range([height, 0]);
-
-    g.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
-    g.append("g").call(d3.axisLeft(y));
-
-    const line = d3.line().x(d => x(d.time)).y(d => y(d.value));
-
-    g.append("path").datum(data.female).attr("fill", "none").attr("stroke", colors[0]).attr("stroke-width", 2).attr("d", line);
-    g.append("path").datum(data.male).attr("fill", "none").attr("stroke", colors[1]).attr("stroke-width", 2).attr("d", line);
 }
 
 function createHeatmap(svgId, data) {
@@ -97,16 +75,23 @@ function createHeatmap(svgId, data) {
     const width = +svg.attr("width"),
           height = +svg.attr("height");
 
-    const xScale = d3.scaleLinear().domain([0, d3.max([...data.female, ...data.male], d => d.time)]).range([0, width]);
-    const yScale = d3.scaleLinear().domain([d3.min([...data.female, ...data.male], d => d.value), d3.max([...data.female, ...data.male], d => d.value)]).range([height, 0]);
+    const dataPoints = [...(data.female || []), ...(data.male || [])];
 
-    svg.selectAll("rect").data([...data.female, ...data.male]).enter()
+    const sampleSize = Math.max(500, Math.floor(dataPoints.length / 10)); // Downsampling to improve performance
+    const sampledData = dataPoints.filter((_, i) => i % sampleSize === 0);
+
+    const xScale = d3.scaleLinear().domain([0, d3.max(sampledData, d => d.time)]).range([0, width]);
+    const yScale = d3.scaleLinear().domain([d3.min(sampledData, d => d.value), d3.max(sampledData, d => d.value)]).range([height, 0]);
+
+    svg.selectAll("rect")
+        .data(sampledData)
+        .enter()
         .append("rect")
         .attr("x", d => xScale(d.time))
         .attr("y", d => yScale(d.value))
         .attr("width", 3)
         .attr("height", 3)
-        .attr("fill", d => d3.interpolateWarm(d.value / d3.max([...data.female, ...data.male], d => d.value)));
+        .attr("fill", d => d3.interpolateWarm(d.value / d3.max(sampledData, d => d.value)));
 }
 
 document.addEventListener("DOMContentLoaded", loadAndProcessData);

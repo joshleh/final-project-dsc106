@@ -25,11 +25,18 @@ p {
     margin-bottom: 20px;
 }
 
+.controls select {
+    margin-left: 10px;
+    padding: 5px;
+    font-size: 14px;
+}
+
 .chart-row {
     display: flex;
     justify-content: center;
     gap: 40px;
     margin-bottom: 40px;
+    flex-wrap: wrap;
 }
 
 .chart-container {
@@ -57,4 +64,3 @@ select {
     padding: 5px;
     font-size: 14px;
 }
-
