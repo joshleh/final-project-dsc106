@@ -10,10 +10,10 @@ document.addEventListener("DOMContentLoaded", function () {
         console.log("Datasets loaded successfully.");
 
         let processedData = {
-            femaleTemp: femaleTemp.map((d, i) => ({ time: i, value: +d.temperature })),
-            maleTemp: maleTemp.map((d, i) => ({ time: i, value: +d.temperature })),
-            femaleAct: femaleAct.map((d, i) => ({ time: i, value: +d.activity })),
-            maleAct: maleAct.map((d, i) => ({ time: i, value: +d.activity }))
+            femaleTemp: femaleTemp.map((d, i) => ({ time: i, value: parseFloat(d.temperature) || 0 })),
+            maleTemp: maleTemp.map((d, i) => ({ time: i, value: parseFloat(d.temperature) || 0 })),
+            femaleAct: femaleAct.map((d, i) => ({ time: i, value: parseFloat(d.activity) || 0 })),
+            maleAct: maleAct.map((d, i) => ({ time: i, value: parseFloat(d.activity) || 0 }))
         };
 
         console.log("Processed Data Sample:", processedData);
@@ -24,7 +24,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
         document.getElementById("toggleEstrus").addEventListener("click", function () {
-            toggleEstrusCycle();
+            toggleEstrusCycle(processedData);
         });
     }).catch(error => console.error("Error loading data:", error));
 });
@@ -74,15 +74,26 @@ function createLineChart(svgSelector, femaleData, maleData, yAxisLabel, xAxisLab
         height = 250 - margin.top - margin.bottom;
 
     let x = d3.scaleLinear().domain([0, femaleData.length]).range([0, width]);
-    let y = d3.scaleLinear().domain([d3.min(femaleData, d => d.value), d3.max(femaleData, d => d.value)]).range([height, 0]);
+    let y = d3.scaleLinear()
+        .domain([
+            Math.min(d3.min(femaleData, d => d.value), d3.min(maleData, d => d.value)),
+            Math.max(d3.max(femaleData, d => d.value), d3.max(maleData, d => d.value))
+        ])
+        .range([height, 0]);
 
-    let line = d3.line().x(d => x(d.time)).y(d => y(d.value));
+    let lineFemale = d3.line().x(d => x(d.time)).y(d => y(d.value));
+    let lineMale = d3.line().x(d => x(d.time)).y(d => y(d.value));
 
     let g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
-    g.append("path").datum(femaleData).attr("fill", "none").attr("stroke", "blue").attr("stroke-width", 2).attr("d", line);
-    g.append("path").datum(maleData).attr("fill", "none").attr("stroke", "red").attr("stroke-width", 2).attr("d", line);
+    g.append("path").datum(femaleData).attr("fill", "none").attr("stroke", "blue").attr("stroke-width", 2).attr("d", lineFemale);
+    g.append("path").datum(maleData).attr("fill", "none").attr("stroke", "red").attr("stroke-width", 2).attr("d", lineMale);
 
     g.append("text").attr("x", width / 2).attr("y", height + 40).attr("class", "axis-label").text(xAxisLabel);
     g.append("text").attr("transform", "rotate(-90)").attr("x", -height / 2).attr("y", -40).attr("class", "axis-label").text(yAxisLabel);
+}
+
+function toggleEstrusCycle(data) {
+    console.log("Toggling Estrus Cycle...");
+    alert("Estrus Cycle toggle not implemented yet.");
 }
