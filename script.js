@@ -66,9 +66,9 @@ async function loadAndProcessData() {
     createLineChart("#temperatureChart", temperatureData, "Temperature (°C)", xLabel, ["blue", "red"], selectedRange);
     createLineChart("#activityChart", activityData, "Activity Level", xLabel, ["blue", "red"], selectedRange);
     createBarGraph("#temperatureBarGraph", temperatureData.female, temperatureData.male, 
-        "Temperature Difference (°C)", xLabel, selectedRange, temperatureData);
+        "Temperature Difference (°C)", xLabel, selectedRange, temperatureData, "temperature");
     createBarGraph("#activityBarGraph", activityData.female, activityData.male, 
-        "Activity Difference", xLabel, selectedRange, activityData);
+        "Activity Difference", xLabel, selectedRange, activityData, "activity");
 }
 
 function createLineChart(svgId, data, yLabel, xLabel, colors, timeRange) {
@@ -246,7 +246,7 @@ function createLineChart(svgId, data, yLabel, xLabel, colors, timeRange) {
     legend.append("text").attr("x", 175).attr("y", 10).text("Male").style("font-size", "14px");
 }
 
-async function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange, fullData) {
+async function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange, fullData, dataType) {
     const svg = d3.select(svgId);
     svg.selectAll("*").remove(); // Clear previous graph
 
@@ -270,14 +270,6 @@ async function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeR
         }));
     }        
     
-    // Reload missing temperature data dynamically
-    if (!femaleData || femaleData.length === 0) {
-        femaleData = await reloadMissingData("female");
-    }
-    if (!maleData || maleData.length === 0) {
-        maleData = await reloadMissingData("male");
-    }
-    
     async function reloadMissingActivityData(missingGender) {
         let rawData = [];
         if (missingGender === "female") {
@@ -292,13 +284,21 @@ async function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeR
         }));
     }
     
-    // Reload missing activity data dynamically
-    if (!femaleData || femaleData.length === 0) {
-        femaleData = await reloadMissingActivityData("female");
-    }
-    if (!maleData || maleData.length === 0) {
-        maleData = await reloadMissingActivityData("male");
-    }
+    if (dataType === "temperature") {
+        if (!femaleData || femaleData.length === 0) {
+            femaleData = await reloadMissingData("female");  // Load missing female temperature data
+        }
+        if (!maleData || maleData.length === 0) {
+            maleData = await reloadMissingData("male");  // Load missing male temperature data
+        }
+    } else if (dataType === "activity") {
+        if (!femaleData || femaleData.length === 0) {
+            femaleData = await reloadMissingActivityData("female");  // Load missing female activity data
+        }
+        if (!maleData || maleData.length === 0) {
+            maleData = await reloadMissingActivityData("male");  // Load missing male activity data
+        }
+    }    
 
     const maxLength = Math.max(femaleData.length, maleData.length);
     let differences = [];
