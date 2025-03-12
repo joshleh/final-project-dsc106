@@ -235,6 +235,12 @@ function createLineChart(svgId, data, yLabel, xLabel, colors, timeRange) {
         .attr("text-anchor", "middle")
         .style("font-size", "14px")
         .text(yLabel);
+
+    legend.append("rect").attr("x", 0).attr("y", 0).attr("width", 20).attr("height", 10).attr("fill", "blue");
+    legend.append("text").attr("x", 25).attr("y", 10).text("Female").style("font-size", "14px");
+
+    legend.append("rect").attr("x", 150).attr("y", 0).attr("width", 20).attr("height", 10).attr("fill", "red");
+    legend.append("text").attr("x", 175).attr("y", 10).text("Male").style("font-size", "14px");
 }
 
 function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) {
@@ -362,8 +368,8 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
     legend.append("rect").attr("x", 0).attr("y", 0).attr("width", 20).attr("height", 10).attr("fill", "blue");
     legend.append("text").attr("x", 25).attr("y", 10).text("Female > Male").style("font-size", "14px");
 
-    legend.append("rect").attr("x", 100).attr("y", 0).attr("width", 20).attr("height", 10).attr("fill", "red");
-    legend.append("text").attr("x", 125).attr("y", 10).text("Male > Female").style("font-size", "14px");
+    legend.append("rect").attr("x", 150).attr("y", 0).attr("width", 20).attr("height", 10).attr("fill", "red");
+    legend.append("text").attr("x", 175).attr("y", 10).text("Male > Female").style("font-size", "14px");
 }
 
 // Sidebar Toggle for Background Info
