@@ -123,8 +123,8 @@ function createLineChart(svgId, data, yLabel, xLabel, colors, timeRange) {
     nightIntervals.forEach(({ start, end }) => {
         g.append("rect")
             .attr("class", "nighttime-rect")
-            .attr("x", x(start))  // ❗ No division needed since timeDivisor is already set
-            .attr("width", x(end) - x(start))  // ❗ Ensure width covers correct period
+            .attr("x", x(start / timeDivisor))  // Convert minutes to days if necessary
+            .attr("width", x(end / timeDivisor) - x(start / timeDivisor)) // Adjust width scaling
             .attr("y", 0)
             .attr("height", height)
             .attr("fill", "grey")
