@@ -274,8 +274,11 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
     const maxLength = Math.max(femaleData?.length || 0, maleData?.length || 0);
 
     // ✅ Compute Mean Values to Use as Default for Missing Data
-    const meanFemale = femaleData.length > 0 ? d3.mean(femaleData, d => d.value) : 0;
-    const meanMale = maleData.length > 0 ? d3.mean(maleData, d => d.value) : 0;
+    // const meanFemale = femaleData.length > 0 ? d3.mean(femaleData, d => d.value) : 0;
+    // const meanMale = maleData.length > 0 ? d3.mean(maleData, d => d.value) : 0;
+
+    const meanFemale = (femaleData && femaleData.length > 0) ? d3.mean(femaleData, d => d.value) : 0;
+    const meanMale = (maleData && maleData.length > 0) ? d3.mean(maleData, d => d.value) : 0;
 
     let previousFemaleValue = meanFemale;
     let previousMaleValue = meanMale;
