@@ -90,6 +90,17 @@ function createLineChart(svgId, data, yLabel, xLabel, colors) {
         ])
         .range([height, 0]);
 
+    // Nighttime background every 12 hours
+    for (let i = 0; i < 14 * 24; i += 24) {
+        g.append("rect")
+            .attr("x", x(i / 24))
+            .attr("width", x((i + 12) / 24) - x(i / 24))
+            .attr("y", 0)
+            .attr("height", height)
+            .attr("fill", "grey")
+            .attr("opacity", 0.2);
+    }
+
     g.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
     g.append("g").call(d3.axisLeft(y));
 
@@ -132,6 +143,7 @@ function createLineChart(svgId, data, yLabel, xLabel, colors) {
         .style("font-size", "14px")
         .text(yLabel);
 }
+
 
 function createHeatmap(svgId, data) {
     const svg = d3.select(svgId);
