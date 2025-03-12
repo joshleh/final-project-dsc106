@@ -235,7 +235,10 @@ function createLineChart(svgId, data, yLabel, xLabel, colors, timeRange) {
         .attr("text-anchor", "middle")
         .style("font-size", "14px")
         .text(yLabel);
-
+    
+    // ✅ Legend Below the Graph (Move it lower)
+    const legend = svg.append("g").attr("transform", `translate(${width / 2 - 50}, ${height + 100})`);
+    
     legend.append("rect").attr("x", 0).attr("y", 0).attr("width", 20).attr("height", 10).attr("fill", "blue");
     legend.append("text").attr("x", 25).attr("y", 10).text("Female").style("font-size", "14px");
 
