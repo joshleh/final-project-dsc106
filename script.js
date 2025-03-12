@@ -106,6 +106,7 @@ function createLineChart(svgId, data, yLabel, xLabel, colors, timeRange) {
     let nightIntervals = [];
 
     if (timeRange.startsWith("day")) {
+        timeDivisor = 1;  // Ensure proper scaling for minutes
         nightIntervals.push({ start: 0, end: 720 });
     } else if (timeRange.startsWith("week")) {
         timeDivisor = 1440;
@@ -122,13 +123,13 @@ function createLineChart(svgId, data, yLabel, xLabel, colors, timeRange) {
     nightIntervals.forEach(({ start, end }) => {
         g.append("rect")
             .attr("class", "nighttime-rect")
-            .attr("x", x(start / timeDivisor))
-            .attr("width", x(end / timeDivisor) - x(start / timeDivisor))
+            .attr("x", x(start))  // ❗ No division needed since timeDivisor is already set
+            .attr("width", x(end) - x(start))  // ❗ Ensure width covers correct period
             .attr("y", 0)
             .attr("height", height)
             .attr("fill", "grey")
             .attr("opacity", 0.2);
-    });
+    });    
 
     g.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
     g.append("g").call(d3.axisLeft(y));
