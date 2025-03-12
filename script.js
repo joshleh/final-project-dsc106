@@ -66,9 +66,9 @@ async function loadAndProcessData() {
     createLineChart("#temperatureChart", temperatureData, "Temperature (°C)", xLabel, ["blue", "red"], selectedRange);
     createLineChart("#activityChart", activityData, "Activity Level", xLabel, ["blue", "red"], selectedRange);
     createBarGraph("#temperatureBarGraph", temperatureData.female, temperatureData.male, 
-        "Temperature Difference (°C)", xLabel, selectedRange);
+        "Temperature Difference (°C)", xLabel, selectedRange, temperatureData);
     createBarGraph("#activityBarGraph", activityData.female, activityData.male, 
-        "Activity Difference", xLabel, selectedRange);
+        "Activity Difference", xLabel, selectedRange, activityData);
 }
 
 function createLineChart(svgId, data, yLabel, xLabel, colors, timeRange) {
@@ -246,7 +246,7 @@ function createLineChart(svgId, data, yLabel, xLabel, colors, timeRange) {
     legend.append("text").attr("x", 175).attr("y", 10).text("Male").style("font-size", "14px");
 }
 
-function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) {
+function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange, fullData) {
     const svg = d3.select(svgId);
     svg.selectAll("*").remove(); // Clear previous graph
 
