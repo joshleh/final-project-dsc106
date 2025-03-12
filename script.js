@@ -55,12 +55,12 @@ async function loadAndProcessData() {
     let activityData = {};
 
     if (selectedGender === "both" || selectedGender === "female") {
-        temperatureData.female = filterValidData(femaleTempData);
-        activityData.female = filterValidData(femaleActData);
+        temperatureData.female = filterValidData(femaleTempData, start, end, timeDivisor);
+        activityData.female = filterValidData(femaleActData, start, end, timeDivisor);        
     }
     if (selectedGender === "both" || selectedGender === "male") {
-        temperatureData.male = filterValidData(maleTempData);
-        activityData.male = filterValidData(maleActData);
+        temperatureData.male = filterValidData(maleTempData, start, end, timeDivisor);
+        activityData.male = filterValidData(maleActData, start, end, timeDivisor);
     }
 
     createLineChart("#temperatureChart", temperatureData, "Temperature (°C)", xLabel, ["blue", "red"], selectedRange);
@@ -96,7 +96,6 @@ function createLineChart(svgId, data, yLabel, xLabel, colors, timeRange) {
     g.selectAll(".nighttime-rect").remove();
 
     let nightIntervals = [];
-    let timeDivisor = 1; // Default for minute-based time (Day mode)
 
     if (timeRange.startsWith("day")) {
         nightIntervals.push({ start: 0, end: 720 });
@@ -256,43 +255,41 @@ async function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeR
 
     const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
-    async function reloadMissingData(missingGender) {
+    async function reloadMissingData(missingGender, start, end, timeDivisor) {
         let rawData = [];
         if (missingGender === "female") {
-            rawData = await loadCSV('female_temp.csv');  // Load female temperature dataset
+            rawData = await loadCSV('female_temp.csv');
         } else if (missingGender === "male") {
-            rawData = await loadCSV('male_temp.csv');  // Load male temperature dataset
+            rawData = await loadCSV('male_temp.csv');
         }
+        return filterValidData(rawData, start, end, timeDivisor);
+    }
     
-        return filterValidData(rawData, start, end, timeDivisor);  // Apply filtering after loading
-    }        
-    
-    async function reloadMissingActivityData(missingGender) {
+    async function reloadMissingActivityData(missingGender, start, end, timeDivisor) {
         let rawData = [];
         if (missingGender === "female") {
-            rawData = await loadCSV('female_act.csv');  // Load female activity dataset
+            rawData = await loadCSV('female_act.csv');
         } else if (missingGender === "male") {
-            rawData = await loadCSV('male_act.csv');  // Load male activity dataset
+            rawData = await loadCSV('male_act.csv');
         }
-    
-        return filterValidData(rawData, start, end, timeDivisor);  // Apply filtering after loading
-    }    
+        return filterValidData(rawData, start, end, timeDivisor);
+    }           
     
     if (dataType === "temperature") {
         if (!femaleData || femaleData.length === 0) {
-            femaleData = await reloadMissingData("female");  
+            femaleData = await reloadMissingData("female", start, end, timeDivisor);
         }
         if (!maleData || maleData.length === 0) {
-            maleData = await reloadMissingData("male");  
+            maleData = await reloadMissingData("male", start, end, timeDivisor);
         }
     } else if (dataType === "activity") {
         if (!femaleData || femaleData.length === 0) {
-            femaleData = await reloadMissingActivityData("female");  
+            femaleData = await reloadMissingActivityData("female", start, end, timeDivisor);
         }
         if (!maleData || maleData.length === 0) {
-            maleData = await reloadMissingActivityData("male");  
+            maleData = await reloadMissingActivityData("male", start, end, timeDivisor);
         }
-    }    
+    }           
 
     const maxLength = Math.max(femaleData.length, maleData.length);
     let differences = [];
@@ -305,7 +302,7 @@ async function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeR
         const maleValue = (maleData[i] && maleData[i].value !== undefined) ? maleData[i].value : previousMaleValue;
 
         differences.push({
-            time: i,
+            time: i / timeDivisor,
             value: femaleValue - maleValue  // Always Female - Male
         });
 
