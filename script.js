@@ -75,7 +75,7 @@ function createLineChart(svgId, data, yLabel, xLabel, colors, timeRange) {
     const svg = d3.select(svgId);
     svg.selectAll("*").remove();
 
-    const margin = { top: 40, right: 70, bottom: 70, left: 80 },
+    const margin = { top: 40, right: 70, bottom: 90, left: 80 };
           width = +svg.attr("width") - margin.left - margin.right,
           height = +svg.attr("height") - margin.top - margin.bottom;
 
@@ -259,7 +259,7 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
     // ✅ Compute Differences (Always Female - Male, Even If One is Missing)
     const differences = [];
     const maxLength = Math.max(femaleData?.length || 0, maleData?.length || 0);
-
+    
     for (let i = 0; i < maxLength; i++) {
         const femaleValue = femaleData?.[i]?.value ?? 0;
         const maleValue = maleData?.[i]?.value ?? 0;
@@ -291,16 +291,16 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
     if (timeRange.startsWith("day")) {
         nightIntervals.push({ start: 0, end: 720 });
     } else if (timeRange.startsWith("week")) {
-        timeDivisor = 1440;
+        timeDivisor = 1440;  // ✅ BarGraph was missing this!
         for (let i = 0; i < 7; i++) {
             nightIntervals.push({ start: i * 1440, end: i * 1440 + 720 });
         }
     } else {
-        timeDivisor = 1440;
+        timeDivisor = 1440;  // ✅ Fix applied!
         for (let i = 0; i < 14; i++) {
             nightIntervals.push({ start: i * 1440, end: i * 1440 + 720 });
         }
-    }
+    }    
 
     nightIntervals.forEach(({ start, end }) => {
         g.append("rect")
