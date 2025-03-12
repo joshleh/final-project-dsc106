@@ -287,26 +287,29 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
     // ✅ Add Nighttime Grey Bars (Now Uses the Same Logic as Line Chart)
     let nightIntervals = [];
     let timeDivisor = 1;
+    let totalDays = 1;  // Default: single day mode
 
     if (timeRange.startsWith("day")) {
         nightIntervals.push({ start: 0, end: 720 });
     } else if (timeRange.startsWith("week")) {
-        timeDivisor = 1440;  // ✅ BarGraph was missing this!
-        for (let i = 0; i < 7; i++) {
-            nightIntervals.push({ start: i * 1440, end: i * 1440 + 720 });
-        }
+        timeDivisor = 1440; 
+        totalDays = 7;  // Week mode
     } else {
-        timeDivisor = 1440;  // ✅ Fix applied!
-        for (let i = 0; i < 14; i++) {
-            nightIntervals.push({ start: i * 1440, end: i * 1440 + 720 });
-        }
-    }    
+        timeDivisor = 1440; 
+        totalDays = 14;  // All 14 days mode
+    }
 
+    // ✅ Ensure Correct Nighttime Intervals Across Days
+    for (let i = 0; i < totalDays; i++) {
+        nightIntervals.push({ start: i * 1440, end: i * 1440 + 720 });
+    }
+
+    // ✅ Append Nighttime Rectangles Properly
     nightIntervals.forEach(({ start, end }) => {
         g.append("rect")
             .attr("class", "nighttime-rect")
-            .attr("x", x(start / timeDivisor))
-            .attr("width", x(end / timeDivisor) - x(start / timeDivisor))
+            .attr("x", x(start / timeDivisor))  // ✅ Fix: Proper Scaling
+            .attr("width", x(end / timeDivisor) - x(start / timeDivisor))  // ✅ Fix: Ensure width maps correctly
             .attr("y", 0)
             .attr("height", height)
             .attr("fill", "grey")
