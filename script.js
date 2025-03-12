@@ -152,9 +152,15 @@ function createHeatmap(svgId, data) {
         .attr("fill", d => d.change > 0 ? "red" : "blue");
 }
 
+
 // Sidebar Toggle for Background Info
 function toggleSidebar() {
-    document.getElementById("sidebar").classList.toggle("open");
+    const sidebar = document.getElementById("sidebar");
+    if (sidebar.style.width === "300px") {
+        sidebar.style.width = "0";
+    } else {
+        sidebar.style.width = "300px";
+    }
 }
 
 document.addEventListener("DOMContentLoaded", loadAndProcessData);

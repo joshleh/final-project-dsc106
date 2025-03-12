@@ -41,17 +41,33 @@
             <option value="female">Female Only</option>
             <option value="male">Male Only</option>
         </select>
+
+        <button id="backgroundBtn" onclick="toggleSidebar()">Background Info</button>
     </div>
 
     <div class="legend-box">
+        <span>Legend (Background Colors):</span>
         <div class="nighttime"></div> Nighttime
         <div class="daytime"></div> Daytime
     </div>
 
     <div id="sidebar">
         <h2>Background Information</h2>
-        <p>Mouse data covering 2 weeks of minute-level activity and core body temperature. Mice follow a 12-hour light/dark cycle.</p>
-        <p>Estrus occurs every 4 days in females.</p>
+        <p>Visualization is based on mouse data covering 2 weeks of minute-level activity and core body temperature. Mice follow a 12-hour light/dark cycle.</p>
+        <p>Estrus (a recurring period of sexual receptivity and fertility in many female mammals) occurs every 4 days in females.</p>
+
+        <h2>Motivation</h2>
+        <p>This project helps us to explore circadian rhythms in mice, particularly with how their activity and body temperatures change over a controlled 12-hour light cycle. Understanding these patterns can provide insights into human biological clocks, which have broader implications for sleep and health studies. </p>
+
+        <h2>Takeaways</h2>
+        <p>One of the most striking takeaways is how strongly mice follow their circadian rhythms. The data clearly shows temperature and activity rising and falling in sync with the light-dark cycle, reinforcing just how much biology is wired to external time cues. </p>
+        <p>Something particularly fascinating is how female mice exhibit higher temperatures and increased activity during estrus. This natural biological cycle appears consistently in the data, and it suggests that hormonal changes play a measurable role in behavior. </p>
+        <p>Since mice are nocturnal, their most active periods occur during the dark cycle. This might seem obvious, but seeing it visualized makes it easy to appreciate just how precise their biological clocks are. </p>
+        <p>These patterns aren’t unique to mice–circadian rhythms govern behavior and health in nearly all organisms, including humans. This project is a small but powerful demonstration of how tracking physiological patterns can reveal deeper biological insights. </p>
+
+        <h2>Conclusion</h2>
+        <p>Our body clocks are always running–whether we’re mice in a lab or people hitting snooze on an alarm. Understanding these cycles can help us improve health, sleep, and even productivity. This project gives us a glimpse into just how much biology is driven by time. </p>
+
         <button onclick="toggleSidebar()">Close</button>
     </div>
 
