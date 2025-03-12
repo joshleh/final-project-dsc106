@@ -198,6 +198,16 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
     g.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
     g.append("g").call(d3.axisLeft(y));
 
+    // Add Tooltip
+    const tooltip = d3.select("body").append("div")
+        .attr("class", "tooltip")
+        .style("position", "absolute")
+        .style("visibility", "hidden")
+        .style("background", "white")
+        .style("border", "1px solid black")
+        .style("padding", "5px")
+        .style("border-radius", "4px");
+
     // Append Bars
     g.selectAll(".bar")
         .data(differences)
@@ -208,7 +218,20 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
         .attr("width", width / differences.length) // Adjust width to match dataset density
         .attr("y", d => (d.value >= 0 ? y(d.value) : y(0)))
         .attr("height", d => Math.abs(y(d.value) - y(0)))
-        .attr("fill", d => (d.value >= 0 ? "red" : "blue")); // Red for Female > Male, Blue for Male > Female
+        .attr("fill", d => (d.value >= 0 ? "red" : "blue")) // Red for Female > Male, Blue for Male > Female
+        .on("mouseover", function(event, d) {
+            tooltip.style("visibility", "visible")
+                .text(`Time: ${d.time}, Difference: ${d.value.toFixed(2)}`);
+            d3.select(this).style("opacity", 0.7);
+        })
+        .on("mousemove", function(event) {
+            tooltip.style("top", (event.pageY - 10) + "px")
+                   .style("left", (event.pageX + 10) + "px");
+        })
+        .on("mouseout", function() {
+            tooltip.style("visibility", "hidden");
+            d3.select(this).style("opacity", 1);
+        });
 
     // X-Axis Label
     g.append("text")
