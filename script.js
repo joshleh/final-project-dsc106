@@ -298,12 +298,13 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange, 
     // }
 
     // ✅ If Female or Male data is missing, bring in the real dataset
+    // If only one dataset exists, create a "placeholder" dataset with matching timestamps
     if (!femaleData || femaleData.length === 0) {
-        femaleData = fullData?.female ?? [];
+        femaleData = maleData.map(d => ({ time: d.time, value: 0 })); // Keep timestamps aligned
     }
     if (!maleData || maleData.length === 0) {
-        maleData = fullData?.male ?? [];
-    }    
+        maleData = femaleData.map(d => ({ time: d.time, value: 0 })); // Keep timestamps aligned
+    }
 
     // ✅ Compute Differences (Always Female - Male, Even If One is Missing)
     let differences = [];
