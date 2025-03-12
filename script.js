@@ -218,7 +218,7 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
         .attr("width", width / differences.length) // Adjust width to match dataset density
         .attr("y", d => (d.value >= 0 ? y(d.value) : y(0)))
         .attr("height", d => Math.abs(y(d.value) - y(0)))
-        .attr("fill", d => (d.value >= 0 ? "red" : "blue")) // Red for Female > Male, Blue for Male > Female
+        .attr("fill", d => (d.value >= 0 ? "blue" : "red")) // Blue for Female > Male, Red for Male > Female
         .on("mouseover", function(event, d) {
             tooltip.style("visibility", "visible")
                 .text(`Time: ${d.time}, Difference: ${d.value.toFixed(2)}`);
