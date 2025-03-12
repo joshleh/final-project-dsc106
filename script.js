@@ -297,17 +297,33 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
     //     if (maleData?.[i]) previousMaleValue = maleData[i].value;
     // }
 
+    // ✅ If Female or Male data is missing, bring in the real dataset
+    if (!femaleData || femaleData.length === 0) {
+        femaleData = fullData.female || [];
+    }
+    if (!maleData || maleData.length === 0) {
+        maleData = fullData.male || [];
+    }
+
+    // ✅ Compute Differences (Always Female - Male, Even If One is Missing)
     let differences = [];
-    const maxLength = Math.max((femaleData?.length ?? 0), (maleData?.length ?? 0));
+    const maxLength = Math.max(femaleData.length, maleData.length);
+
+    let previousFemaleValue = femaleData.length > 0 ? femaleData[0].value : 0;
+    let previousMaleValue = maleData.length > 0 ? maleData[0].value : 0;
 
     for (let i = 0; i < maxLength; i++) {
-        const femaleValue = femaleData?.[i]?.value ?? 0;  // Default to 0 if missing
-        const maleValue = maleData?.[i]?.value ?? 0;  // Default to 0 if missing
+        const femaleValue = femaleData?.[i]?.value ?? previousFemaleValue;
+        const maleValue = maleData?.[i]?.value ?? previousMaleValue;
 
         differences.push({
             time: i,
             value: femaleValue - maleValue  // Always Female - Male
         });
+
+        // ✅ Update previous values for next iteration (so missing values use the last known value)
+        if (femaleData?.[i]) previousFemaleValue = femaleData[i].value;
+        if (maleData?.[i]) previousMaleValue = maleData[i].value;
     }
 
     // ✅ Set Up X and Y Scales
