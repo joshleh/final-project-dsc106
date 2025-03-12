@@ -247,11 +247,26 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
 
     const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
-    // Compute Differences (Female - Male)
-    const differences = femaleData.map((d, i) => ({
-        time: d.time,
-        value: d.value - (maleData[i]?.value || 0) // Ensure male data exists
-    }));
+    // Determine Differences (Female - Male)
+    let differences = [];
+    if (femaleData && maleData) {
+        differences = femaleData.map((d, i) => ({
+            time: d.time,
+            value: d.value - (maleData[i]?.value || 0) // Ensure male data exists
+        }));
+    } else if (femaleData) {
+        differences = femaleData.map(d => ({
+            time: d.time,
+            value: d.value // Show female values directly if no male data
+        }));
+    } else if (maleData) {
+        differences = maleData.map(d => ({
+            time: d.time,
+            value: -d.value // Show male values inversed if no female data
+        }));
+    }
+
+    if (differences.length === 0) return; // Don't render if no valid data
 
     const x = d3.scaleLinear()
         .domain([0, d3.max(differences, d => d.time)])
@@ -267,28 +282,22 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
     g.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
     g.append("g").call(d3.axisLeft(y));
 
-    // Determine how to scale nighttime intervals based on time range
+    // Nighttime background
     let nightIntervals = [];
-    let timeDivisor = 1; // Default: minute-based time for "Day" selection
+    let timeDivisor = timeRange.startsWith("day") ? 1 : 1440; // Adjust for days vs minutes
 
     if (timeRange.startsWith("day")) {
-        // Nighttime spans first 720 minutes (first half of the day)
         nightIntervals.push({ start: 0, end: 720 });
     } else if (timeRange.startsWith("week")) {
-        // Nighttime occurs every 12 hours across 7 days
-        timeDivisor = 1440; // 1 day = 1440 minutes
         for (let i = 0; i < 7; i++) {
-            nightIntervals.push({ start: i, end: i + 0.5 }); // First half of each day is night
+            nightIntervals.push({ start: i, end: i + 0.5 });
         }
     } else {
-        // All 14 Days mode
-        timeDivisor = 1440; // 1 day = 1440 minutes
         for (let i = 0; i < 14; i++) {
             nightIntervals.push({ start: i, end: i + 0.5 });
         }
     }
 
-    // Append Nighttime Background
     nightIntervals.forEach(({ start, end }) => {
         g.append("rect")
             .attr("class", "nighttime-rect")
@@ -300,7 +309,7 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
             .attr("opacity", 0.2);
     });
 
-    // Add Tooltip
+    // Tooltip
     const tooltip = d3.select("body").append("div")
         .attr("class", "tooltip")
         .style("position", "absolute")
@@ -310,17 +319,17 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
         .style("padding", "5px")
         .style("border-radius", "4px");
 
-    // Append Bars
+    // Bars
     g.selectAll(".bar")
         .data(differences)
         .enter()
         .append("rect")
         .attr("class", "bar")
         .attr("x", d => x(d.time))
-        .attr("width", width / differences.length) // Adjust width to match dataset density
+        .attr("width", width / differences.length) // Adjust width
         .attr("y", d => (d.value >= 0 ? y(d.value) : y(0)))
         .attr("height", d => Math.abs(y(d.value) - y(0)))
-        .attr("fill", d => (d.value >= 0 ? "blue" : "red")) // Blue for Female > Male, Red for Male > Female
+        .attr("fill", d => (d.value >= 0 ? "blue" : "red"))
         .on("mouseover", function(event, d) {
             tooltip.style("visibility", "visible")
                 .text(`Time: ${d.time}, Difference: ${d.value.toFixed(2)}`);

@@ -108,3 +108,11 @@ svg {
     cursor: pointer;
 }
 
+.tooltip {
+    position: absolute;
+    visibility: hidden;
+    background: white;
+    border: 1px solid black;
+    padding: 5px;
+    border-radius: 4px;
+}
