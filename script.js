@@ -247,22 +247,20 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
 
     const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
-    // Compute Differences
+    // ✅ Compute Differences (Ensure Always Female - Male, Even If One is Missing)
     const differences = [];
     const maxLength = Math.max(femaleData?.length || 0, maleData?.length || 0);
 
     for (let i = 0; i < maxLength; i++) {
-        const femaleValue = femaleData?.[i]?.value ?? null;
-        const maleValue = maleData?.[i]?.value ?? null;
-
-        if (femaleValue !== null && maleValue !== null) {
-            differences.push({ time: i, value: femaleValue - maleValue });
-        } else {
-            differences.push({ time: i, value: 0 }); // Maintain zero difference when missing
-        }
+        const femaleValue = femaleData?.[i]?.value ?? 0;
+        const maleValue = maleData?.[i]?.value ?? 0;
+        differences.push({
+            time: i,
+            value: femaleValue - maleValue  // Always Female - Male
+        });
     }
 
-    // Set up X and Y scales
+    // ✅ Set Up X and Y Scales
     const x = d3.scaleLinear()
         .domain([0, d3.max(differences, d => d.time)])
         .range([0, width]);
@@ -277,7 +275,7 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
     g.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
     g.append("g").call(d3.axisLeft(y));
 
-    // Add Nighttime Grey Bars (Consistent with Line Chart)
+    // ✅ Add Nighttime Grey Bars (Now Uses the Same Logic as Line Chart)
     let nightIntervals = [];
     let timeDivisor = 1;
 
@@ -306,7 +304,7 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
             .attr("opacity", 0.2);
     });
 
-    // Tooltip for Hover
+    // ✅ Tooltip for Hover
     const tooltip = d3.select("body").append("div")
         .attr("class", "tooltip")
         .style("position", "absolute")
@@ -316,17 +314,17 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
         .style("padding", "5px")
         .style("border-radius", "4px");
 
-    // Append Bars
+    // ✅ Append Bars (Fix Coloring Issue)
     g.selectAll(".bar")
         .data(differences)
         .enter()
         .append("rect")
         .attr("class", "bar")
         .attr("x", d => x(d.time))
-        .attr("width", width / differences.length)
+        .attr("width", width / differences.length) // Adjust width to match dataset density
         .attr("y", d => (d.value >= 0 ? y(d.value) : y(0)))
         .attr("height", d => Math.abs(y(d.value) - y(0)))
-        .attr("fill", d => (d.value >= 0 ? "blue" : "red")) // Always Female - Male coloring
+        .attr("fill", d => (d.value >= 0 ? "blue" : "red")) // ✅ Fix: Always Female - Male colors
         .on("mouseover", function(event, d) {
             tooltip.style("visibility", "visible")
                 .text(`Time: ${d.time}, Difference: ${d.value.toFixed(2)}`);
@@ -341,7 +339,7 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
             d3.select(this).style("opacity", 1);
         });
 
-    // X-Axis Label
+    // ✅ X-Axis Label
     g.append("text")
         .attr("x", width / 2)
         .attr("y", height + 50)
@@ -349,7 +347,7 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
         .style("font-size", "14px")
         .text(xLabel);
 
-    // Y-Axis Label
+    // ✅ Y-Axis Label
     g.append("text")
         .attr("transform", "rotate(-90)")
         .attr("x", -height / 2)
@@ -357,6 +355,15 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
         .attr("text-anchor", "middle")
         .style("font-size", "14px")
         .text(yLabel);
+
+    // ✅ Legend Below the Graph
+    const legend = svg.append("g").attr("transform", `translate(${width / 2 - 50}, ${height + 70})`);
+
+    legend.append("rect").attr("x", 0).attr("y", 0).attr("width", 20).attr("height", 10).attr("fill", "blue");
+    legend.append("text").attr("x", 25).attr("y", 10).text("Female > Male").style("font-size", "14px");
+
+    legend.append("rect").attr("x", 100).attr("y", 0).attr("width", 20).attr("height", 10).attr("fill", "red");
+    legend.append("text").attr("x", 125).attr("y", 10).text("Male > Female").style("font-size", "14px");
 }
 
 // Sidebar Toggle for Background Info
