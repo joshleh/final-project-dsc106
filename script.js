@@ -256,36 +256,17 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
 
     const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
-    // // ✅ Compute Differences (Always Female - Male, Even If One is Missing)
-    // const differences = [];
-    // const maxLength = Math.max(femaleData?.length || 0, maleData?.length || 0);
-    
-    // for (let i = 0; i < maxLength; i++) {
-    //     const femaleValue = femaleData?.[i]?.value ?? 0;
-    //     const maleValue = maleData?.[i]?.value ?? 0;
-    //     differences.push({
-    //         time: i,
-    //         value: (femaleData?.[i]?.value ?? previousFemaleValue) - (maleData?.[i]?.value ?? previousMaleValue)
-    //     });
-    // }
+    // ✅ Compute Differences (Always Female - Male, Even If One is Missing)
     const differences = [];
     const maxLength = Math.max(femaleData?.length || 0, maleData?.length || 0);
-
-    let previousFemaleValue = 0;
-    let previousMaleValue = 0;
-
+    
     for (let i = 0; i < maxLength; i++) {
-        const femaleValue = femaleData?.[i]?.value ?? previousFemaleValue;
-        const maleValue = maleData?.[i]?.value ?? previousMaleValue;
-
+        const femaleValue = femaleData?.[i]?.value ?? 0;
+        const maleValue = maleData?.[i]?.value ?? 0;
         differences.push({
             time: i,
-            value: femaleValue - maleValue  // Always Female - Male
+            value: (femaleData?.[i]?.value ?? previousFemaleValue) - (maleData?.[i]?.value ?? previousMaleValue)
         });
-
-        // Update previous values for next iteration
-        if (femaleData?.[i]) previousFemaleValue = femaleData[i].value;
-        if (maleData?.[i]) previousMaleValue = maleData[i].value;
     }
 
     // ✅ Set Up X and Y Scales
