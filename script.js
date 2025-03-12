@@ -167,7 +167,6 @@ function createLineChart(svgId, data, yLabel, xLabel, colors, timeRange) {
         .text(yLabel);
 }
 
-
 function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) {
     const svg = d3.select(svgId);
     svg.selectAll("*").remove(); // Clear previous graph
@@ -197,6 +196,39 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
 
     g.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
     g.append("g").call(d3.axisLeft(y));
+
+    // Determine how to scale nighttime intervals based on time range
+    let nightIntervals = [];
+    let timeDivisor = 1; // Default: minute-based time for "Day" selection
+
+    if (timeRange.startsWith("day")) {
+        // Nighttime spans first 720 minutes (first half of the day)
+        nightIntervals.push({ start: 0, end: 720 });
+    } else if (timeRange.startsWith("week")) {
+        // Nighttime occurs every 12 hours across 7 days
+        timeDivisor = 1440; // 1 day = 1440 minutes
+        for (let i = 0; i < 7; i++) {
+            nightIntervals.push({ start: i, end: i + 0.5 }); // First half of each day is night
+        }
+    } else {
+        // All 14 Days mode
+        timeDivisor = 1440; // 1 day = 1440 minutes
+        for (let i = 0; i < 14; i++) {
+            nightIntervals.push({ start: i, end: i + 0.5 });
+        }
+    }
+
+    // Append Nighttime Background
+    nightIntervals.forEach(({ start, end }) => {
+        g.append("rect")
+            .attr("class", "nighttime-rect")
+            .attr("x", x(start))
+            .attr("width", x(end) - x(start))
+            .attr("y", 0)
+            .attr("height", height)
+            .attr("fill", "grey")
+            .attr("opacity", 0.2);
+    });
 
     // Add Tooltip
     const tooltip = d3.select("body").append("div")
