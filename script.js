@@ -299,32 +299,55 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange, 
 
     // ✅ If Female or Male data is missing, bring in the real dataset
     // If only one dataset exists, create a "placeholder" dataset with matching timestamps
-    if (!femaleData || femaleData.length === 0) {
-        femaleData = maleData.map(d => ({ time: d.time, value: 0 })); // Keep timestamps aligned
-    }
-    if (!maleData || maleData.length === 0) {
-        maleData = femaleData.map(d => ({ time: d.time, value: 0 })); // Keep timestamps aligned
-    }
+    // if (!femaleData || femaleData.length === 0) {
+    //     femaleData = maleData.map(d => ({ time: d.time, value: 0 })); // Keep timestamps aligned
+    // }
+    // if (!maleData || maleData.length === 0) {
+    //     maleData = femaleData.map(d => ({ time: d.time, value: 0 })); // Keep timestamps aligned
+    // }
 
-    // ✅ Compute Differences (Always Female - Male, Even If One is Missing)
+    // // ✅ Compute Differences (Always Female - Male, Even If One is Missing)
+    // let differences = [];
+    // const maxLength = Math.max(femaleData.length, maleData.length);
+
+    // let previousFemaleValue = femaleData.length > 0 ? femaleData[0].value : 0;
+    // let previousMaleValue = maleData.length > 0 ? maleData[0].value : 0;
+
+    // for (let i = 0; i < maxLength; i++) {
+    //     const femaleValue = femaleData?.[i]?.value ?? previousFemaleValue;
+    //     const maleValue = maleData?.[i]?.value ?? previousMaleValue;
+
+    //     differences.push({
+    //         time: i,
+    //         value: femaleValue - maleValue  // Always Female - Male
+    //     });
+
+    //     // ✅ Update previous values for next iteration (so missing values use the last known value)
+    //     if (femaleData?.[i]) previousFemaleValue = femaleData[i].value;
+    //     if (maleData?.[i]) previousMaleValue = maleData[i].value;
+    // }
+
+    // ✅ Create a Map for Fast Lookups
+    let maleMap = new Map(maleData?.map(d => [d.time, d.value]) || []);
+    let femaleMap = new Map(femaleData?.map(d => [d.time, d.value]) || []);
+
+    // ✅ Compute Differences (Only when both values exist)
     let differences = [];
-    const maxLength = Math.max(femaleData.length, maleData.length);
 
-    let previousFemaleValue = femaleData.length > 0 ? femaleData[0].value : 0;
-    let previousMaleValue = maleData.length > 0 ? maleData[0].value : 0;
+    let timeKeys = new Set([...maleMap.keys(), ...femaleMap.keys()]); // Union of all timestamps
+    timeKeys = [...timeKeys].sort((a, b) => a - b); // Sort time values
 
-    for (let i = 0; i < maxLength; i++) {
-        const femaleValue = femaleData?.[i]?.value ?? previousFemaleValue;
-        const maleValue = maleData?.[i]?.value ?? previousMaleValue;
+    timeKeys.forEach(time => {
+        if (maleMap.has(time) && femaleMap.has(time)) {
+            let femaleValue = femaleMap.get(time);
+            let maleValue = maleMap.get(time);
+            differences.push({ time, value: femaleValue - maleValue });
+        }
+    });
 
-        differences.push({
-            time: i,
-            value: femaleValue - maleValue  // Always Female - Male
-        });
-
-        // ✅ Update previous values for next iteration (so missing values use the last known value)
-        if (femaleData?.[i]) previousFemaleValue = femaleData[i].value;
-        if (maleData?.[i]) previousMaleValue = maleData[i].value;
+    if (differences.length === 0) {
+        console.warn("No valid differences computed - skipping graph rendering.");
+        return;
     }
 
     // ✅ Set Up X and Y Scales
