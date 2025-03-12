@@ -265,7 +265,7 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
         const maleValue = maleData?.[i]?.value ?? 0;
         differences.push({
             time: i,
-            value: femaleValue - maleValue  // Always Female - Male
+            value: (femaleData?.[i]?.value ?? previousFemaleValue) - (maleData?.[i]?.value ?? previousMaleValue)
         });
     }
 
