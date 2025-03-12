@@ -1,3 +1,11 @@
+function filterValidData(dataArray, start, end, timeDivisor) {
+    return dataArray.slice(start, end).map((row, i) => ({
+        time: i / timeDivisor,
+        value: row[0],
+        change: i > 0 ? row[0] - dataArray[i - 1][0] : 0
+    })).filter(d => !isNaN(d.value));
+}
+
 async function loadCSV(file) {
     try {
         const response = await fetch(`data/${file}`);
@@ -43,13 +51,13 @@ async function loadAndProcessData() {
         timeDivisor = 1;
     }
 
-    function filterValidData(dataArray, start, end, timeDivisor) {
-        return dataArray.slice(start, end).map((row, i) => ({
-            time: i / timeDivisor,
-            value: row[0],
-            change: i > 0 ? row[0] - dataArray[i - 1][0] : 0
-        })).filter(d => !isNaN(d.value));
-    }    
+    // function filterValidData(dataArray, start, end, timeDivisor) {
+    //     return dataArray.slice(start, end).map((row, i) => ({
+    //         time: i / timeDivisor,
+    //         value: row[0],
+    //         change: i > 0 ? row[0] - dataArray[i - 1][0] : 0
+    //     })).filter(d => !isNaN(d.value));
+    // }    
 
     let temperatureData = {};
     let activityData = {};
@@ -258,9 +266,9 @@ async function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeR
     async function reloadMissingData(missingGender, start, end, timeDivisor) {
         let rawData = [];
         if (missingGender === "female") {
-            rawData = await loadCSV('female_temp.csv');
+            rawData = await loadCSV('female_temp.csv');  // Load female temperature dataset
         } else if (missingGender === "male") {
-            rawData = await loadCSV('male_temp.csv');
+            rawData = await loadCSV('male_temp.csv');  // Load male temperature dataset
         }
         return filterValidData(rawData, start, end, timeDivisor);
     }
@@ -268,28 +276,32 @@ async function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeR
     async function reloadMissingActivityData(missingGender, start, end, timeDivisor) {
         let rawData = [];
         if (missingGender === "female") {
-            rawData = await loadCSV('female_act.csv');
+            rawData = await loadCSV('female_act.csv');  // Load female activity dataset
         } else if (missingGender === "male") {
-            rawData = await loadCSV('male_act.csv');
+            rawData = await loadCSV('male_act.csv');  // Load male activity dataset
         }
         return filterValidData(rawData, start, end, timeDivisor);
-    }           
+    }               
     
     if (dataType === "temperature") {
         if (!femaleData || femaleData.length === 0) {
+            console.log("Reloading Female Temperature Data");
             femaleData = await reloadMissingData("female", start, end, timeDivisor);
         }
         if (!maleData || maleData.length === 0) {
+            console.log("Reloading Male Temperature Data");
             maleData = await reloadMissingData("male", start, end, timeDivisor);
         }
     } else if (dataType === "activity") {
         if (!femaleData || femaleData.length === 0) {
+            console.log("Reloading Female Activity Data");
             femaleData = await reloadMissingActivityData("female", start, end, timeDivisor);
         }
         if (!maleData || maleData.length === 0) {
+            console.log("Reloading Male Activity Data");
             maleData = await reloadMissingActivityData("male", start, end, timeDivisor);
         }
-    }           
+    }               
 
     const maxLength = Math.max(femaleData.length, maleData.length);
     let differences = [];
