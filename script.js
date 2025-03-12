@@ -69,7 +69,7 @@ async function loadAndProcessData() {
     createHeatmap("#activityHeatmap", activityData);
 }
 
-function createLineChart(svgId, data, yLabel, xLabel, colors) {
+function createLineChart(svgId, data, yLabel, xLabel, colors, timeRange) {
     const svg = d3.select(svgId);
     svg.selectAll("*").remove();
 
@@ -90,11 +90,14 @@ function createLineChart(svgId, data, yLabel, xLabel, colors) {
         ])
         .range([height, 0]);
 
-    // Nighttime background every 12 hours
-    for (let i = 0; i < 14 * 24; i += 24) {
+    // Adjust nighttime background placement based on time range selection
+    const timeUnit = timeRange.startsWith("day") ? 60 : 1440; // Minutes in a day vs. hours
+    const interval = timeRange.startsWith("day") ? 720 : 12; // 12-hour cycle for day vs. week
+
+    for (let i = 0; i < (timeRange.startsWith("day") ? 1440 : 14 * 1440); i += interval * timeUnit) {
         g.append("rect")
-            .attr("x", x(i / 24))
-            .attr("width", x((i + 12) / 24) - x(i / 24))
+            .attr("x", x(i / timeUnit))
+            .attr("width", x((i + interval * timeUnit) / timeUnit) - x(i / timeUnit))
             .attr("y", 0)
             .attr("height", height)
             .attr("fill", "grey")
