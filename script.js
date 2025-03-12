@@ -444,7 +444,10 @@ async function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeR
 
     // ✅ Set Up X and Y Scales
     const x = d3.scaleLinear()
-        .domain([start / timeDivisor, end / timeDivisor])
+        .domain([
+            d3.min(differences, d => d.time), 
+            d3.max(differences, d => d.time)
+        ])
         .range([0, width]);
 
     const y = d3.scaleLinear()
