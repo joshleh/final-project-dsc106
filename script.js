@@ -256,7 +256,7 @@ async function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeR
 
     const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
-    async function reloadMissingData(missingGender, start, end, timeDivisor) {
+    async function reloadMissingData(missingGender) {
         let rawData = [];
         if (missingGender === "female") {
             rawData = await loadCSV('female_temp.csv');  // Load female temperature dataset
@@ -267,7 +267,7 @@ async function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeR
         return filterValidData(rawData, start, end, timeDivisor);  // Apply filtering after loading
     }        
     
-    async function reloadMissingActivityData(missingGender, start, end, timeDivisor) {
+    async function reloadMissingActivityData(missingGender) {
         let rawData = [];
         if (missingGender === "female") {
             rawData = await loadCSV('female_act.csv');  // Load female activity dataset
@@ -280,17 +280,17 @@ async function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeR
     
     if (dataType === "temperature") {
         if (!femaleData || femaleData.length === 0) {
-            femaleData = await reloadMissingData("female", start, end, timeDivisor);  
+            femaleData = await reloadMissingData("female");  
         }
         if (!maleData || maleData.length === 0) {
-            maleData = await reloadMissingData("male", start, end, timeDivisor);  
+            maleData = await reloadMissingData("male");  
         }
     } else if (dataType === "activity") {
         if (!femaleData || femaleData.length === 0) {
-            femaleData = await reloadMissingActivityData("female", start, end, timeDivisor);  
+            femaleData = await reloadMissingActivityData("female");  
         }
         if (!maleData || maleData.length === 0) {
-            maleData = await reloadMissingActivityData("male", start, end, timeDivisor);  
+            maleData = await reloadMissingActivityData("male");  
         }
     }    
 
@@ -450,16 +450,13 @@ async function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeR
 
     // ✅ Add Nighttime Grey Bars (Now Uses the Same Logic as Line Chart)
     let nightIntervals = [];
-    let timeDivisor = 1;
     let totalDays = 1;  // Default: single day mode
 
     if (timeRange.startsWith("day")) {
         nightIntervals.push({ start: 0, end: 720 });
     } else if (timeRange.startsWith("week")) {
-        timeDivisor = 1440; 
         totalDays = 7;  // Week mode
-    } else {
-        timeDivisor = 1440; 
+    } else { 
         totalDays = 14;  // All 14 days mode
     }
 
@@ -472,8 +469,8 @@ async function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeR
     nightIntervals.forEach(({ start, end }) => {
         g.append("rect")
             .attr("class", "nighttime-rect")
-            .attr("x", x(start))  // ✅ Remove division by timeDivisor, since x is already scaled
-            .attr("width", x(end) - x(start))  // ✅ Ensure width covers the correct period
+            .attr("x", x(start / timeDivisor))  // ✅ Remove division by timeDivisor, since x is already scaled
+            .attr("width", x(end / timeDivisor) - x(start / timeDivisor))  // ✅ Ensure width covers the correct period
             .attr("y", 0)
             .attr("height", height)
             .attr("fill", "grey")
