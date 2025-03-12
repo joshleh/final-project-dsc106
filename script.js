@@ -247,17 +247,20 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
 
     const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
-    // Compute Differences (Female - Male), ensuring the structure remains even when one dataset is missing
+    // ✅ Compute Differences (Ensure Always Female - Male, Even If One is Missing)
     const differences = [];
-    for (let i = 0; i < Math.max(femaleData?.length || 0, maleData?.length || 0); i++) {
+    const maxLength = Math.max(femaleData?.length || 0, maleData?.length || 0);
+
+    for (let i = 0; i < maxLength; i++) {
         const femaleValue = femaleData?.[i]?.value ?? 0;
         const maleValue = maleData?.[i]?.value ?? 0;
         differences.push({
             time: i,
-            value: femaleValue - maleValue  // Always Female - Male, even if only one dataset exists
+            value: femaleValue - maleValue  // ✅ Always Female - Male
         });
     }
 
+    // ✅ Set Up X and Y Scales
     const x = d3.scaleLinear()
         .domain([0, d3.max(differences, d => d.time)])
         .range([0, width]);
@@ -272,7 +275,7 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
     g.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
     g.append("g").call(d3.axisLeft(y));
 
-    // ✅ Add Nighttime Grey Bars
+    // ✅ Add Nighttime Grey Bars (Fixed for All Time Ranges)
     let nightIntervals = [];
     let timeDivisor = 1;
 
@@ -293,7 +296,7 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
     nightIntervals.forEach(({ start, end }) => {
         g.append("rect")
             .attr("class", "nighttime-rect")
-            .attr("x", x(start / timeDivisor))  // Fix scaling issue
+            .attr("x", x(start / timeDivisor))  
             .attr("width", x(end / timeDivisor) - x(start / timeDivisor))
             .attr("y", 0)
             .attr("height", height)
