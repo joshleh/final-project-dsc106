@@ -73,7 +73,7 @@ function createLineChart(svgId, data, yLabel, xLabel, colors) {
     const svg = d3.select(svgId);
     svg.selectAll("*").remove();
 
-    const margin = { top: 40, right: 70, bottom: 50, left: 80 },
+    const margin = { top: 40, right: 70, bottom: 70, left: 80 },
           width = +svg.attr("width") - margin.left - margin.right,
           height = +svg.attr("height") - margin.top - margin.bottom;
 
@@ -114,6 +114,23 @@ function createLineChart(svgId, data, yLabel, xLabel, colors) {
             .attr("stroke-width", 2)
             .attr("d", line);
     }
+
+    // X-Axis Label
+    g.append("text")
+        .attr("x", width / 2)
+        .attr("y", height + 50)
+        .attr("text-anchor", "middle")
+        .style("font-size", "14px")
+        .text(xLabel);
+
+    // Y-Axis Label
+    g.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("x", -height / 2)
+        .attr("y", -60)
+        .attr("text-anchor", "middle")
+        .style("font-size", "14px")
+        .text(yLabel);
 }
 
 function createHeatmap(svgId, data) {
