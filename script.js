@@ -270,31 +270,44 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
     // }
 
     // ✅ Compute Differences (Always Female - Male, Even If One is Missing)
+    // let differences = [];
+    // const maxLength = Math.max(femaleData?.length || 0, maleData?.length || 0);
+
+    // // ✅ Compute Mean Values to Use as Default for Missing Data
+    // // const meanFemale = femaleData.length > 0 ? d3.mean(femaleData, d => d.value) : 0;
+    // // const meanMale = maleData.length > 0 ? d3.mean(maleData, d => d.value) : 0;
+
+    // const meanFemale = (femaleData && femaleData.length > 0) ? d3.mean(femaleData, d => d.value) : 0;
+    // const meanMale = (maleData && maleData.length > 0) ? d3.mean(maleData, d => d.value) : 0;
+
+    // let previousFemaleValue = meanFemale;
+    // let previousMaleValue = meanMale;
+
+    // for (let i = 0; i < maxLength; i++) {
+    //     const femaleValue = femaleData?.[i]?.value ?? previousFemaleValue;
+    //     const maleValue = maleData?.[i]?.value ?? previousMaleValue;
+
+    //     differences.push({
+    //         time: i,
+    //         value: femaleValue - maleValue  // Always Female - Male
+    //     });
+
+    //     // ✅ Update previous values for next iteration (so missing values use the last known value)
+    //     if (femaleData?.[i]) previousFemaleValue = femaleData[i].value;
+    //     if (maleData?.[i]) previousMaleValue = maleData[i].value;
+    // }
+
     let differences = [];
-    const maxLength = Math.max(femaleData?.length || 0, maleData?.length || 0);
-
-    // ✅ Compute Mean Values to Use as Default for Missing Data
-    // const meanFemale = femaleData.length > 0 ? d3.mean(femaleData, d => d.value) : 0;
-    // const meanMale = maleData.length > 0 ? d3.mean(maleData, d => d.value) : 0;
-
-    const meanFemale = (femaleData && femaleData.length > 0) ? d3.mean(femaleData, d => d.value) : 0;
-    const meanMale = (maleData && maleData.length > 0) ? d3.mean(maleData, d => d.value) : 0;
-
-    let previousFemaleValue = meanFemale;
-    let previousMaleValue = meanMale;
+    const maxLength = Math.max((femaleData?.length ?? 0), (maleData?.length ?? 0));
 
     for (let i = 0; i < maxLength; i++) {
-        const femaleValue = femaleData?.[i]?.value ?? previousFemaleValue;
-        const maleValue = maleData?.[i]?.value ?? previousMaleValue;
+        const femaleValue = femaleData?.[i]?.value ?? 0;  // Default to 0 if missing
+        const maleValue = maleData?.[i]?.value ?? 0;  // Default to 0 if missing
 
         differences.push({
             time: i,
             value: femaleValue - maleValue  // Always Female - Male
         });
-
-        // ✅ Update previous values for next iteration (so missing values use the last known value)
-        if (femaleData?.[i]) previousFemaleValue = femaleData[i].value;
-        if (maleData?.[i]) previousMaleValue = maleData[i].value;
     }
 
     // ✅ Set Up X and Y Scales
