@@ -299,11 +299,11 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange, 
 
     // ✅ If Female or Male data is missing, bring in the real dataset
     if (!femaleData || femaleData.length === 0) {
-        femaleData = fullData.female || [];
+        femaleData = fullData?.female ?? [];
     }
     if (!maleData || maleData.length === 0) {
-        maleData = fullData.male || [];
-    }
+        maleData = fullData?.male ?? [];
+    }    
 
     // ✅ Compute Differences (Always Female - Male, Even If One is Missing)
     let differences = [];
