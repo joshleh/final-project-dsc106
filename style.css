@@ -62,21 +62,34 @@ svg {
 }
 
 .legend-box {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    margin-top: 10px;
-    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-    background-color: white;
-    border-radius: 5px;
-    padding: 5px;
+    display: inline-block; /* Makes the box wrap around the content */
+    text-align: center; /* Centers text inside */
+    padding: 10px 15px; /* Adds space inside the box */
+    margin: 20px auto; /* Centers the box and adds space above/below */
+    border: 2px solid black; /* Adds a visible border */
+    border-radius: 8px; /* Smooth rounded corners */
+    background-color: #f8f9fa; /* Sets background to match the site's default background */
+    box-shadow: 2px 2px 8px rgba(0, 0, 0, 0.1); /* Adds a soft shadow */
+    width: fit-content; /* Keeps the box only as wide as its content */
 }
 
+/* Ensure the small color indicators look nice */
 .legend-box div {
     width: 20px;
     height: 20px;
     display: inline-block;
+    border: 1px solid black; /* Adds a small border for contrast */
+}
+
+/* Adjust spacing between elements */
+.legend-box span {
+    font-weight: bold;
+    margin-right: 10px;
+}
+
+/* Keeps "Nighttime" and "Daytime" text aligned with color indicators */
+.legend-box div + span {
+    margin-right: 15px;
 }
 
 .nighttime {
