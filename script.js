@@ -256,6 +256,28 @@ async function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeR
 
     const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
+    async function reloadMissingData(missingGender) {
+        let rawData = [];
+        if (missingGender === "female") {
+            rawData = await loadCSV('female_temp.csv');  // Load female temperature dataset
+        } else if (missingGender === "male") {
+            rawData = await loadCSV('male_temp.csv');  // Load male temperature dataset
+        }
+    
+        return rawData.map((row, i) => ({
+            time: i, 
+            value: row[0] 
+        }));
+    }        
+    
+    // Reload missing temperature data dynamically
+    if (!femaleData || femaleData.length === 0) {
+        femaleData = await reloadMissingData("female");
+    }
+    if (!maleData || maleData.length === 0) {
+        maleData = await reloadMissingData("male");
+    }
+    
     async function reloadMissingActivityData(missingGender) {
         let rawData = [];
         if (missingGender === "female") {
@@ -266,20 +288,21 @@ async function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeR
     
         return rawData.map((row, i) => ({
             time: i, 
-            value: row[0]  // Extract first column as value
+            value: row[0] 
         }));
-    }    
+    }
     
-    // Reload missing data dynamically
+    // Reload missing activity data dynamically
     if (!femaleData || femaleData.length === 0) {
         femaleData = await reloadMissingActivityData("female");
     }
     if (!maleData || maleData.length === 0) {
         maleData = await reloadMissingActivityData("male");
-    }    
-    
-    let differences = [];
+    }
+
     const maxLength = Math.max(femaleData.length, maleData.length);
+    let differences = [];
+
     let previousFemaleValue = femaleData.length > 0 ? femaleData[0].value : 0;
     let previousMaleValue = maleData.length > 0 ? maleData[0].value : 0;
 
