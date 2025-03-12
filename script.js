@@ -91,18 +91,39 @@ function createLineChart(svgId, data, yLabel, xLabel, colors, timeRange) {
         .range([height, 0]);
 
     // Adjust nighttime background placement based on time range selection
-    const timeUnit = timeRange.startsWith("day") ? 60 : 1440; // Minutes in a day vs. hours
-    const interval = timeRange.startsWith("day") ? 720 : 12; // 12-hour cycle for day vs. week
+    g.selectAll(".nighttime-rect").remove();
 
-    for (let i = 0; i < (timeRange.startsWith("day") ? 1440 : 14 * 1440); i += interval * timeUnit) {
+    let nightIntervals = [];
+    let timeDivisor = 1; // Default for minute-based time (Day mode)
+
+    if (timeRange.startsWith("Day")) {
+        // Day mode: Nighttime every 720 minutes
+        nightIntervals.push({ start: 0, end: 720 });
+    } else if (timeRange.startsWith("Week")) {
+        // Week mode: Adjust for 7-day scale
+        timeDivisor = 1440; // 1 day = 1440 minutes
+        for (let i = 0; i < 7; i++) {
+            nightIntervals.push({ start: i, end: i + 0.5 }); // Half-day nighttime
+        }
+    } else {
+        // All 14 Days mode
+        timeDivisor = 1440; // 1 day = 1440 minutes
+        for (let i = 0; i < 14; i++) {
+            nightIntervals.push({ start: i, end: i + 0.5 });
+        }
+    }
+
+    // Append nighttime background rects based on adjusted scale
+    nightIntervals.forEach(({ start, end }) => {
         g.append("rect")
-            .attr("x", x(i / timeUnit))
-            .attr("width", x((i + interval * timeUnit) / timeUnit) - x(i / timeUnit))
+            .attr("class", "nighttime-rect")
+            .attr("x", x(start / timeDivisor))
+            .attr("width", x(end / timeDivisor) - x(start / timeDivisor))
             .attr("y", 0)
             .attr("height", height)
             .attr("fill", "grey")
             .attr("opacity", 0.2);
-    }
+    });
 
     g.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
     g.append("g").call(d3.axisLeft(y));
