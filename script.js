@@ -269,21 +269,26 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
     //     });
     // }
 
+    // ✅ Compute Differences (Always Female - Male, Even If One is Missing)
+    let differences = [];
+    const maxLength = Math.max(femaleData?.length || 0, maleData?.length || 0);  // <== Fix: Add this back!
+
     let previousFemaleValue = 0;
     let previousMaleValue = 0;
+
     for (let i = 0; i < maxLength; i++) {
         const femaleValue = femaleData?.[i]?.value ?? previousFemaleValue;
         const maleValue = maleData?.[i]?.value ?? previousMaleValue;
-    
+
         differences.push({
             time: i,
             value: femaleValue - maleValue  // Always Female - Male
         });
-    
+
         // ✅ Update previous values for next iteration (so missing values use the last known value)
         if (femaleData?.[i]) previousFemaleValue = femaleData[i].value;
         if (maleData?.[i]) previousMaleValue = maleData[i].value;
-    }    
+    }
 
     // ✅ Set Up X and Y Scales
     const x = d3.scaleLinear()
