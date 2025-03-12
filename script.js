@@ -247,11 +247,11 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
 
     const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
-    // Compute Differences (Female - Male)
+    // Compute Differences (Female - Male) even if only one dataset is selected
     const differences = [];
-    for (let i = 0; i < Math.max(femaleData.length, maleData.length); i++) {
-        const femaleValue = femaleData[i] ? femaleData[i].value : 0;
-        const maleValue = maleData[i] ? maleData[i].value : 0;
+    for (let i = 0; i < Math.max(femaleData?.length || 0, maleData?.length || 0); i++) {
+        const femaleValue = femaleData?.[i]?.value ?? 0;
+        const maleValue = maleData?.[i]?.value ?? 0;
         differences.push({
             time: i,
             value: femaleValue - maleValue
@@ -271,6 +271,35 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
 
     g.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
     g.append("g").call(d3.axisLeft(y));
+
+    // Add Nighttime Grey Bars
+    let nightIntervals = [];
+    let timeDivisor = 1;
+
+    if (timeRange.startsWith("day")) {
+        nightIntervals.push({ start: 0, end: 720 });
+    } else if (timeRange.startsWith("week")) {
+        timeDivisor = 1440;
+        for (let i = 0; i < 7; i++) {
+            nightIntervals.push({ start: i * 1440, end: i * 1440 + 720 });
+        }
+    } else {
+        timeDivisor = 1440;
+        for (let i = 0; i < 14; i++) {
+            nightIntervals.push({ start: i * 1440, end: i * 1440 + 720 });
+        }
+    }
+
+    nightIntervals.forEach(({ start, end }) => {
+        g.append("rect")
+            .attr("class", "nighttime-rect")
+            .attr("x", x(start / timeDivisor))
+            .attr("width", x(end / timeDivisor) - x(start / timeDivisor))
+            .attr("y", 0)
+            .attr("height", height)
+            .attr("fill", "grey")
+            .attr("opacity", 0.2);
+    });
 
     // Add Tooltip
     const tooltip = d3.select("body").append("div")
