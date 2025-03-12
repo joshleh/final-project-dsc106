@@ -63,8 +63,8 @@ async function loadAndProcessData() {
         activityData.male = filterValidData(maleActData);
     }
 
-    createLineChart("#temperatureChart", temperatureData, "Temperature (°C)", xLabel, ["blue", "red"]);
-    createLineChart("#activityChart", activityData, "Activity Level", xLabel, ["green", "orange"]);
+    createLineChart("#temperatureChart", temperatureData, "Temperature (°C)", xLabel, ["blue", "red"], selectedRange);
+    createLineChart("#activityChart", activityData, "Activity Level", xLabel, ["green", "orange"], selectedRange);
     createHeatmap("#temperatureHeatmap", temperatureData);
     createHeatmap("#activityHeatmap", activityData);
 }
