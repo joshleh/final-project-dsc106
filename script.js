@@ -99,23 +99,19 @@ function createLineChart(svgId, data, yLabel, xLabel, colors, timeRange) {
     let timeDivisor = 1; // Default for minute-based time (Day mode)
 
     if (timeRange.startsWith("day")) {
-        // Day mode: Nighttime spans first 720 minutes (first half of the day)
         nightIntervals.push({ start: 0, end: 720 });
     } else if (timeRange.startsWith("week")) {
-        // Week mode: Every 12-hour cycle repeats over 7 days
-        timeDivisor = 1440; // 1 day = 1440 minutes
+        timeDivisor = 1440;
         for (let i = 0; i < 7; i++) {
             nightIntervals.push({ start: i * 1440, end: i * 1440 + 720 });
         }
     } else {
-        // All 14 Days mode
-        timeDivisor = 1440; // 1 day = 1440 minutes
+        timeDivisor = 1440;
         for (let i = 0; i < 14; i++) {
             nightIntervals.push({ start: i * 1440, end: i * 1440 + 720 });
         }
     }
 
-    // Append night background rectangles
     nightIntervals.forEach(({ start, end }) => {
         g.append("rect")
             .attr("class", "nighttime-rect")
@@ -134,6 +130,28 @@ function createLineChart(svgId, data, yLabel, xLabel, colors, timeRange) {
         .x(d => x(d.time))
         .y(d => y(d.value));
 
+    // Create Tooltip
+    const tooltip = d3.select("body").append("div")
+        .attr("class", "tooltip")
+        .style("position", "absolute")
+        .style("visibility", "hidden")
+        .style("background", "white")
+        .style("border", "1px solid black")
+        .style("padding", "5px")
+        .style("border-radius", "4px");
+
+    // Create Focus Circles for Hover
+    const focusFemale = g.append("circle")
+        .attr("r", 5)
+        .attr("fill", colors[0])
+        .style("visibility", "hidden");
+
+    const focusMale = g.append("circle")
+        .attr("r", 5)
+        .attr("fill", colors[1])
+        .style("visibility", "hidden");
+
+    // Append Female Line
     if (data.female) {
         g.append("path")
             .datum(data.female)
@@ -143,6 +161,7 @@ function createLineChart(svgId, data, yLabel, xLabel, colors, timeRange) {
             .attr("d", line);
     }
 
+    // Append Male Line
     if (data.male) {
         g.append("path")
             .datum(data.male)
@@ -151,6 +170,54 @@ function createLineChart(svgId, data, yLabel, xLabel, colors, timeRange) {
             .attr("stroke-width", 2)
             .attr("d", line);
     }
+
+    // Transparent overlay for mouse interaction
+    g.append("rect")
+        .attr("width", width)
+        .attr("height", height)
+        .style("fill", "none")
+        .style("pointer-events", "all")
+        .on("mousemove", function (event) {
+            const [mouseX] = d3.pointer(event);
+            const timeValue = x.invert(mouseX);
+
+            const nearestFemale = data.female
+                ? data.female.reduce((a, b) => (Math.abs(b.time - timeValue) < Math.abs(a.time - timeValue) ? b : a))
+                : null;
+
+            const nearestMale = data.male
+                ? data.male.reduce((a, b) => (Math.abs(b.time - timeValue) < Math.abs(a.time - timeValue) ? b : a))
+                : null;
+
+            tooltip.style("visibility", "visible");
+
+            let tooltipText = `Time: ${timeValue.toFixed(2)}`;
+
+            if (nearestFemale) {
+                focusFemale
+                    .attr("cx", x(nearestFemale.time))
+                    .attr("cy", y(nearestFemale.value))
+                    .style("visibility", "visible");
+                tooltipText += ` | Female: ${nearestFemale.value.toFixed(2)}`;
+            }
+
+            if (nearestMale) {
+                focusMale
+                    .attr("cx", x(nearestMale.time))
+                    .attr("cy", y(nearestMale.value))
+                    .style("visibility", "visible");
+                tooltipText += ` | Male: ${nearestMale.value.toFixed(2)}`;
+            }
+
+            tooltip.text(tooltipText)
+                .style("top", (event.pageY - 10) + "px")
+                .style("left", (event.pageX + 10) + "px");
+        })
+        .on("mouseout", function () {
+            tooltip.style("visibility", "hidden");
+            focusFemale.style("visibility", "hidden");
+            focusMale.style("visibility", "hidden");
+        });
 
     // X-Axis Label
     g.append("text")
