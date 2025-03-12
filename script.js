@@ -308,8 +308,8 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
     nightIntervals.forEach(({ start, end }) => {
         g.append("rect")
             .attr("class", "nighttime-rect")
-            .attr("x", x(start / timeDivisor))  // ✅ Fix: Proper Scaling
-            .attr("width", x(end / timeDivisor) - x(start / timeDivisor))  // ✅ Fix: Ensure width maps correctly
+            .attr("x", x(start))  // ✅ Remove division by timeDivisor, since x is already scaled
+            .attr("width", x(end) - x(start))  // ✅ Ensure width covers the correct period
             .attr("y", 0)
             .attr("height", height)
             .attr("fill", "grey")
