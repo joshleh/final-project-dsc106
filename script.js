@@ -43,13 +43,13 @@ async function loadAndProcessData() {
         timeDivisor = 1;
     }
 
-    function filterValidData(dataArray) {
+    function filterValidData(dataArray, start, end, timeDivisor) {
         return dataArray.slice(start, end).map((row, i) => ({
             time: i / timeDivisor,
             value: row[0],
             change: i > 0 ? row[0] - dataArray[i - 1][0] : 0
         })).filter(d => !isNaN(d.value));
-    }
+    }    
 
     let temperatureData = {};
     let activityData = {};
@@ -66,9 +66,9 @@ async function loadAndProcessData() {
     createLineChart("#temperatureChart", temperatureData, "Temperature (°C)", xLabel, ["blue", "red"], selectedRange);
     createLineChart("#activityChart", activityData, "Activity Level", xLabel, ["blue", "red"], selectedRange);
     createBarGraph("#temperatureBarGraph", temperatureData.female, temperatureData.male, 
-        "Temperature Difference (°C)", xLabel, selectedRange, temperatureData, "temperature");
+        "Temperature Difference (°C)", xLabel, selectedRange, temperatureData, "temperature", start, end, timeDivisor);
     createBarGraph("#activityBarGraph", activityData.female, activityData.male, 
-        "Activity Difference", xLabel, selectedRange, activityData, "activity");
+        "Activity Difference", xLabel, selectedRange, activityData, "activity", start, end, timeDivisor);    
 }
 
 function createLineChart(svgId, data, yLabel, xLabel, colors, timeRange) {
@@ -246,7 +246,7 @@ function createLineChart(svgId, data, yLabel, xLabel, colors, timeRange) {
     legend.append("text").attr("x", 175).attr("y", 10).text("Male").style("font-size", "14px");
 }
 
-async function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange, fullData, dataType) {
+async function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange, fullData, dataType, start, end, timeDivisor) {
     const svg = d3.select(svgId);
     svg.selectAll("*").remove(); // Clear previous graph
 
@@ -256,7 +256,7 @@ async function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeR
 
     const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
-    async function reloadMissingData(missingGender) {
+    async function reloadMissingData(missingGender, start, end, timeDivisor) {
         let rawData = [];
         if (missingGender === "female") {
             rawData = await loadCSV('female_temp.csv');  // Load female temperature dataset
@@ -264,13 +264,10 @@ async function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeR
             rawData = await loadCSV('male_temp.csv');  // Load male temperature dataset
         }
     
-        return rawData.map((row, i) => ({
-            time: i, 
-            value: row[0] 
-        }));
+        return filterValidData(rawData, start, end, timeDivisor);  // Apply filtering after loading
     }        
     
-    async function reloadMissingActivityData(missingGender) {
+    async function reloadMissingActivityData(missingGender, start, end, timeDivisor) {
         let rawData = [];
         if (missingGender === "female") {
             rawData = await loadCSV('female_act.csv');  // Load female activity dataset
@@ -278,25 +275,22 @@ async function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeR
             rawData = await loadCSV('male_act.csv');  // Load male activity dataset
         }
     
-        return rawData.map((row, i) => ({
-            time: i, 
-            value: row[0] 
-        }));
-    }
+        return filterValidData(rawData, start, end, timeDivisor);  // Apply filtering after loading
+    }    
     
     if (dataType === "temperature") {
         if (!femaleData || femaleData.length === 0) {
-            femaleData = await reloadMissingData("female");  // Load missing female temperature data
+            femaleData = await reloadMissingData("female", start, end, timeDivisor);  
         }
         if (!maleData || maleData.length === 0) {
-            maleData = await reloadMissingData("male");  // Load missing male temperature data
+            maleData = await reloadMissingData("male", start, end, timeDivisor);  
         }
     } else if (dataType === "activity") {
         if (!femaleData || femaleData.length === 0) {
-            femaleData = await reloadMissingActivityData("female");  // Load missing female activity data
+            femaleData = await reloadMissingActivityData("female", start, end, timeDivisor);  
         }
         if (!maleData || maleData.length === 0) {
-            maleData = await reloadMissingActivityData("male");  // Load missing male activity data
+            maleData = await reloadMissingActivityData("male", start, end, timeDivisor);  
         }
     }    
 
@@ -441,7 +435,7 @@ async function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeR
 
     // ✅ Set Up X and Y Scales
     const x = d3.scaleLinear()
-        .domain([0, d3.max(differences, d => d.time)])
+        .domain([start / timeDivisor, end / timeDivisor])
         .range([0, width]);
 
     const y = d3.scaleLinear()
