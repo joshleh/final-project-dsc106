@@ -241,13 +241,13 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
     const svg = d3.select(svgId);
     svg.selectAll("*").remove(); // Clear previous graph
 
-    const margin = { top: 40, right: 70, bottom: 70, left: 80 },
+    const margin = { top: 40, right: 70, bottom: 90, left: 80 }, // Increased bottom margin for legend
           width = +svg.attr("width") - margin.left - margin.right,
           height = +svg.attr("height") - margin.top - margin.bottom;
 
     const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
-    // ✅ Compute Differences (Ensure Always Female - Male, Even If One is Missing)
+    // ✅ Compute Differences (Always Female - Male, Even If One is Missing)
     const differences = [];
     const maxLength = Math.max(femaleData?.length || 0, maleData?.length || 0);
 
@@ -342,7 +342,7 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
     // ✅ X-Axis Label
     g.append("text")
         .attr("x", width / 2)
-        .attr("y", height + 50)
+        .attr("y", height + 40)
         .attr("text-anchor", "middle")
         .style("font-size", "14px")
         .text(xLabel);
@@ -357,7 +357,7 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
         .text(yLabel);
 
     // ✅ Legend Below the Graph
-    const legend = svg.append("g").attr("transform", `translate(${width / 2 - 50}, ${height + 70})`);
+    const legend = svg.append("g").attr("transform", `translate(${width / 2 - 50}, ${height + 60})`);
 
     legend.append("rect").attr("x", 0).attr("y", 0).attr("width", 20).attr("height", 10).attr("fill", "blue");
     legend.append("text").attr("x", 25).attr("y", 10).text("Female > Male").style("font-size", "14px");
