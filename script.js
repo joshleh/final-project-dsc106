@@ -271,10 +271,14 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
 
     // ✅ Compute Differences (Always Female - Male, Even If One is Missing)
     let differences = [];
-    const maxLength = Math.max(femaleData?.length || 0, maleData?.length || 0);  // <== Fix: Add this back!
+    const maxLength = Math.max(femaleData?.length || 0, maleData?.length || 0);
 
-    let previousFemaleValue = 0;
-    let previousMaleValue = 0;
+    // ✅ Compute Mean Values to Use as Default for Missing Data
+    const meanFemale = femaleData.length > 0 ? d3.mean(femaleData, d => d.value) : 0;
+    const meanMale = maleData.length > 0 ? d3.mean(maleData, d => d.value) : 0;
+
+    let previousFemaleValue = meanFemale;
+    let previousMaleValue = meanMale;
 
     for (let i = 0; i < maxLength; i++) {
         const femaleValue = femaleData?.[i]?.value ?? previousFemaleValue;
