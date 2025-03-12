@@ -257,17 +257,17 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange, 
     const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
     // ✅ Compute Differences (Always Female - Male, Even If One is Missing)
-    // const differences = [];
-    // const maxLength = Math.max(femaleData?.length || 0, maleData?.length || 0);
+    const differences = [];
+    const maxLength = Math.max(femaleData?.length || 0, maleData?.length || 0);
     
-    // for (let i = 0; i < maxLength; i++) {
-    //     const femaleValue = femaleData?.[i]?.value ?? 0;
-    //     const maleValue = maleData?.[i]?.value ?? 0;
-    //     differences.push({
-    //         time: i,
-    //         value: (femaleData?.[i]?.value ?? previousFemaleValue) - (maleData?.[i]?.value ?? previousMaleValue)
-    //     });
-    // }
+    for (let i = 0; i < maxLength; i++) {
+        const femaleValue = femaleData?.[i]?.value ?? 0;
+        const maleValue = maleData?.[i]?.value ?? 0;
+        differences.push({
+            time: i,
+            value: (femaleData?.[i]?.value ?? previousFemaleValue) - (maleData?.[i]?.value ?? previousMaleValue)
+        });
+    }
 
     // ✅ Compute Differences (Always Female - Male, Even If One is Missing)
     // let differences = [];
@@ -328,27 +328,27 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange, 
     // }
 
     // ✅ Create a Map for Fast Lookups
-    let maleMap = new Map(maleData?.map(d => [d.time, d.value]) || []);
-    let femaleMap = new Map(femaleData?.map(d => [d.time, d.value]) || []);
+    // let maleMap = new Map(maleData?.map(d => [d.time, d.value]) || []);
+    // let femaleMap = new Map(femaleData?.map(d => [d.time, d.value]) || []);
 
-    // ✅ Compute Differences (Only when both values exist)
-    let differences = [];
+    // // ✅ Compute Differences (Only when both values exist)
+    // let differences = [];
 
-    let timeKeys = new Set([...maleMap.keys(), ...femaleMap.keys()]); // Union of all timestamps
-    timeKeys = [...timeKeys].sort((a, b) => a - b); // Sort time values
+    // let timeKeys = new Set([...maleMap.keys(), ...femaleMap.keys()]); // Union of all timestamps
+    // timeKeys = [...timeKeys].sort((a, b) => a - b); // Sort time values
 
-    timeKeys.forEach(time => {
-        if (maleMap.has(time) && femaleMap.has(time)) {
-            let femaleValue = femaleMap.get(time);
-            let maleValue = maleMap.get(time);
-            differences.push({ time, value: femaleValue - maleValue });
-        }
-    });
+    // timeKeys.forEach(time => {
+    //     if (maleMap.has(time) && femaleMap.has(time)) {
+    //         let femaleValue = femaleMap.get(time);
+    //         let maleValue = maleMap.get(time);
+    //         differences.push({ time, value: femaleValue - maleValue });
+    //     }
+    // });
 
-    if (differences.length === 0) {
-        console.warn("No valid differences computed - skipping graph rendering.");
-        return;
-    }
+    // if (differences.length === 0) {
+    //     console.warn("No valid differences computed - skipping graph rendering.");
+    //     return;
+    // }
 
     // ✅ Set Up X and Y Scales
     const x = d3.scaleLinear()
