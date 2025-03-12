@@ -247,7 +247,7 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
 
     const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
-    // Compute Differences (Female - Male) even if only one dataset is selected
+    // Compute Differences (Female - Male) even when only one dataset is selected
     const differences = [];
     for (let i = 0; i < Math.max(femaleData?.length || 0, maleData?.length || 0); i++) {
         const femaleValue = femaleData?.[i]?.value ?? 0;
@@ -276,9 +276,9 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
     let nightIntervals = [];
     let timeDivisor = 1;
 
-    if (timeRange.startsWith("day")) {
+    if (timeRange.startsWith("Day")) {
         nightIntervals.push({ start: 0, end: 720 });
-    } else if (timeRange.startsWith("week")) {
+    } else if (timeRange.startsWith("Week")) {
         timeDivisor = 1440;
         for (let i = 0; i < 7; i++) {
             nightIntervals.push({ start: i * 1440, end: i * 1440 + 720 });
