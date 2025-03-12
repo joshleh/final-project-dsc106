@@ -247,20 +247,22 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
 
     const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
-    // ✅ Compute Differences (Ensure Always Female - Male, Even If One is Missing)
+    // Compute Differences
     const differences = [];
     const maxLength = Math.max(femaleData?.length || 0, maleData?.length || 0);
 
     for (let i = 0; i < maxLength; i++) {
-        const femaleValue = femaleData?.[i]?.value ?? 0;
-        const maleValue = maleData?.[i]?.value ?? 0;
-        differences.push({
-            time: i,
-            value: femaleValue - maleValue  // ✅ Always Female - Male
-        });
+        const femaleValue = femaleData?.[i]?.value ?? null;
+        const maleValue = maleData?.[i]?.value ?? null;
+
+        if (femaleValue !== null && maleValue !== null) {
+            differences.push({ time: i, value: femaleValue - maleValue });
+        } else {
+            differences.push({ time: i, value: 0 }); // Maintain zero difference when missing
+        }
     }
 
-    // ✅ Set Up X and Y Scales
+    // Set up X and Y scales
     const x = d3.scaleLinear()
         .domain([0, d3.max(differences, d => d.time)])
         .range([0, width]);
@@ -275,19 +277,19 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
     g.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
     g.append("g").call(d3.axisLeft(y));
 
-    // ✅ Add Nighttime Grey Bars (Fixed for All Time Ranges)
+    // Add Nighttime Grey Bars (Consistent with Line Chart)
     let nightIntervals = [];
     let timeDivisor = 1;
 
     if (timeRange.startsWith("day")) {
         nightIntervals.push({ start: 0, end: 720 });
     } else if (timeRange.startsWith("week")) {
-        timeDivisor = 1440; // Scale to daily increments
+        timeDivisor = 1440;
         for (let i = 0; i < 7; i++) {
             nightIntervals.push({ start: i * 1440, end: i * 1440 + 720 });
         }
     } else {
-        timeDivisor = 1440; // Scale to daily increments
+        timeDivisor = 1440;
         for (let i = 0; i < 14; i++) {
             nightIntervals.push({ start: i * 1440, end: i * 1440 + 720 });
         }
@@ -296,7 +298,7 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
     nightIntervals.forEach(({ start, end }) => {
         g.append("rect")
             .attr("class", "nighttime-rect")
-            .attr("x", x(start / timeDivisor))  
+            .attr("x", x(start / timeDivisor))
             .attr("width", x(end / timeDivisor) - x(start / timeDivisor))
             .attr("y", 0)
             .attr("height", height)
@@ -304,7 +306,7 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
             .attr("opacity", 0.2);
     });
 
-    // ✅ Add Tooltip
+    // Tooltip for Hover
     const tooltip = d3.select("body").append("div")
         .attr("class", "tooltip")
         .style("position", "absolute")
@@ -314,17 +316,17 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
         .style("padding", "5px")
         .style("border-radius", "4px");
 
-    // ✅ Append Bars (Fix Coloring Issue)
+    // Append Bars
     g.selectAll(".bar")
         .data(differences)
         .enter()
         .append("rect")
         .attr("class", "bar")
         .attr("x", d => x(d.time))
-        .attr("width", width / differences.length) // Adjust width to match dataset density
+        .attr("width", width / differences.length)
         .attr("y", d => (d.value >= 0 ? y(d.value) : y(0)))
         .attr("height", d => Math.abs(y(d.value) - y(0)))
-        .attr("fill", d => (d.value >= 0 ? "blue" : "red")) // ✅ Fix: Always Female - Male colors
+        .attr("fill", d => (d.value >= 0 ? "blue" : "red")) // Always Female - Male coloring
         .on("mouseover", function(event, d) {
             tooltip.style("visibility", "visible")
                 .text(`Time: ${d.time}, Difference: ${d.value.toFixed(2)}`);
@@ -339,7 +341,7 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
             d3.select(this).style("opacity", 1);
         });
 
-    // ✅ X-Axis Label
+    // X-Axis Label
     g.append("text")
         .attr("x", width / 2)
         .attr("y", height + 50)
@@ -347,7 +349,7 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) 
         .style("font-size", "14px")
         .text(xLabel);
 
-    // ✅ Y-Axis Label
+    // Y-Axis Label
     g.append("text")
         .attr("transform", "rotate(-90)")
         .attr("x", -height / 2)
