@@ -79,6 +79,11 @@ svg {
     background-color: grey;
 }
 
+.nighttime-rect {
+    fill: grey;
+    opacity: 0.2;
+}
+
 .daytime {
     background-color: white;
 }
