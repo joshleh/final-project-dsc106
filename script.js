@@ -65,8 +65,10 @@ async function loadAndProcessData() {
 
     createLineChart("#temperatureChart", temperatureData, "Temperature (°C)", xLabel, ["blue", "red"], selectedRange);
     createLineChart("#activityChart", activityData, "Activity Level", xLabel, ["green", "orange"], selectedRange);
-    createHeatmap("#temperatureHeatmap", temperatureData);
-    createHeatmap("#activityHeatmap", activityData);
+    createBarGraph("#temperatureBarGraph", temperatureData.female, temperatureData.male, 
+        "Temperature Difference (°C)", xLabel, selectedRange);
+    createBarGraph("#activityBarGraph", activityData.female, activityData.male, 
+        "Activity Difference", xLabel, selectedRange);
 }
 
 function createLineChart(svgId, data, yLabel, xLabel, colors, timeRange) {
@@ -166,42 +168,65 @@ function createLineChart(svgId, data, yLabel, xLabel, colors, timeRange) {
 }
 
 
-function createHeatmap(svgId, data) {
+function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange) {
     const svg = d3.select(svgId);
-    svg.selectAll("*").remove();
+    svg.selectAll("*").remove(); // Clear previous graph
 
-    const width = +svg.attr("width"),
-          height = +svg.attr("height");
+    const margin = { top: 40, right: 70, bottom: 70, left: 80 },
+          width = +svg.attr("width") - margin.left - margin.right,
+          height = +svg.attr("height") - margin.top - margin.bottom;
 
-    const dataPoints = [...(data.female || []), ...(data.male || [])];
+    const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
 
-    if (dataPoints.length === 0) return;
+    // Compute Differences (Female - Male)
+    const differences = femaleData.map((d, i) => ({
+        time: d.time,
+        value: d.value - (maleData[i]?.value || 0) // Ensure male data exists
+    }));
 
-    const xScale = d3.scaleLinear().domain([0, d3.max(dataPoints, d => d.time)]).range([0, width]);
-    const yScale = d3.scaleLinear().domain([d3.min(dataPoints, d => d.value), d3.max(dataPoints, d => d.value)]).range([height, 0]);
+    const x = d3.scaleLinear()
+        .domain([0, d3.max(differences, d => d.time)])
+        .range([0, width]);
 
-    // Nighttime background
-    for (let i = 0; i < 14 * 24; i += 24) {
-        svg.append("rect")
-            .attr("x", xScale(i / 24))
-            .attr("width", xScale((i + 12) / 24) - xScale(i / 24))
-            .attr("y", 0)
-            .attr("height", height)
-            .attr("fill", "grey")
-            .attr("opacity", 0.2);
-    }
+    const y = d3.scaleLinear()
+        .domain([
+            d3.min(differences, d => d.value),
+            d3.max(differences, d => d.value)
+        ])
+        .range([height, 0]);
 
-    // Data points
-    svg.selectAll("circle")
-        .data(dataPoints)
+    g.append("g").attr("transform", `translate(0,${height})`).call(d3.axisBottom(x));
+    g.append("g").call(d3.axisLeft(y));
+
+    // Append Bars
+    g.selectAll(".bar")
+        .data(differences)
         .enter()
-        .append("circle")
-        .attr("cx", d => xScale(d.time))
-        .attr("cy", d => yScale(d.value))
-        .attr("r", 2)
-        .attr("fill", d => d.change > 0 ? "red" : "blue");
-}
+        .append("rect")
+        .attr("class", "bar")
+        .attr("x", d => x(d.time))
+        .attr("width", width / differences.length) // Adjust width to match dataset density
+        .attr("y", d => (d.value >= 0 ? y(d.value) : y(0)))
+        .attr("height", d => Math.abs(y(d.value) - y(0)))
+        .attr("fill", d => (d.value >= 0 ? "red" : "blue")); // Red for Female > Male, Blue for Male > Female
 
+    // X-Axis Label
+    g.append("text")
+        .attr("x", width / 2)
+        .attr("y", height + 50)
+        .attr("text-anchor", "middle")
+        .style("font-size", "14px")
+        .text(xLabel);
+
+    // Y-Axis Label
+    g.append("text")
+        .attr("transform", "rotate(-90)")
+        .attr("x", -height / 2)
+        .attr("y", -60)
+        .attr("text-anchor", "middle")
+        .style("font-size", "14px")
+        .text(yLabel);
+}
 
 // Sidebar Toggle for Background Info
 function toggleSidebar() {
