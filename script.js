@@ -96,19 +96,22 @@ function createLineChart(svgId, data, yLabel, xLabel, colors, timeRange) {
     g.selectAll(".nighttime-rect").remove();
 
     let nightIntervals = [];
+    let timeDivisor = 1; // Default for minute-based time (Day mode)
 
-    if (timeRange.startsWith("Day")) {
-        // Day mode: Lights off from 0 to 720 minutes (first half of the day)
+    if (timeRange.startsWith("day")) {
+        // Day mode: Nighttime spans first 720 minutes (first half of the day)
         nightIntervals.push({ start: 0, end: 720 });
-    } else if (timeRange.startsWith("Week")) {
+    } else if (timeRange.startsWith("week")) {
         // Week mode: Every 12-hour cycle repeats over 7 days
+        timeDivisor = 1440; // 1 day = 1440 minutes
         for (let i = 0; i < 7; i++) {
-            nightIntervals.push({ start: i, end: i + 0.5 }); // First half of each day is night
+            nightIntervals.push({ start: i * 1440, end: i * 1440 + 720 });
         }
     } else {
         // All 14 Days mode
+        timeDivisor = 1440; // 1 day = 1440 minutes
         for (let i = 0; i < 14; i++) {
-            nightIntervals.push({ start: i, end: i + 0.5 });
+            nightIntervals.push({ start: i * 1440, end: i * 1440 + 720 });
         }
     }
 
@@ -116,8 +119,8 @@ function createLineChart(svgId, data, yLabel, xLabel, colors, timeRange) {
     nightIntervals.forEach(({ start, end }) => {
         g.append("rect")
             .attr("class", "nighttime-rect")
-            .attr("x", x(start))
-            .attr("width", x(end) - x(start))
+            .attr("x", x(start / timeDivisor))
+            .attr("width", x(end / timeDivisor) - x(start / timeDivisor))
             .attr("y", 0)
             .attr("height", height)
             .attr("fill", "grey")
