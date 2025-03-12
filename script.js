@@ -246,7 +246,7 @@ function createLineChart(svgId, data, yLabel, xLabel, colors, timeRange) {
     legend.append("text").attr("x", 175).attr("y", 10).text("Male").style("font-size", "14px");
 }
 
-function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange, fullData) {
+async function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange, fullData) {
     const svg = d3.select(svgId);
     svg.selectAll("*").remove(); // Clear previous graph
 
@@ -255,6 +255,48 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange, 
           height = +svg.attr("height") - margin.top - margin.bottom;
 
     const g = svg.append("g").attr("transform", `translate(${margin.left},${margin.top})`);
+
+    async function reloadMissingData(missingGender) {
+        let rawData = [];
+        if (missingGender === "female") {
+            rawData = await loadCSV('female_temp.csv');
+        } else if (missingGender === "male") {
+            rawData = await loadCSV('male_temp.csv');
+        }
+
+        return rawData.map((row, i) => ({
+            time: i, 
+            value: row[0] 
+        }));
+    }
+    
+    // Reload missing data dynamically
+    if (!femaleData || femaleData.length === 0) {
+        femaleData = await reloadMissingData("female");
+    }
+    if (!maleData || maleData.length === 0) {
+        maleData = await reloadMissingData("male");
+    }    
+    
+    const maxLength = Math.max(femaleData.length, maleData.length);
+    let differences = [];
+
+    let previousFemaleValue = femaleData.length > 0 ? femaleData[0].value : 0;
+    let previousMaleValue = maleData.length > 0 ? maleData[0].value : 0;
+
+    for (let i = 0; i < maxLength; i++) {
+        const femaleValue = (femaleData[i] && femaleData[i].value !== undefined) ? femaleData[i].value : previousFemaleValue;
+        const maleValue = (maleData[i] && maleData[i].value !== undefined) ? maleData[i].value : previousMaleValue;
+
+
+        differences.push({
+            time: i,
+            value: femaleValue - maleValue  // Always Female - Male
+        });
+
+        if (femaleData?.[i]) previousFemaleValue = femaleData[i].value;
+        if (maleData?.[i]) previousMaleValue = maleData[i].value;
+    }
 
     // ✅ Compute Differences (Always Female - Male, Even If One is Missing)
     // const differences = [];
@@ -269,27 +311,31 @@ function createBarGraph(svgId, femaleData, maleData, yLabel, xLabel, timeRange, 
     //     });
     // }
 
+    //////
+
     // ✅ Compute Differences (Always Female - Male, Even If One is Missing)
-    const differences = [];
-    const maxLength = Math.max(femaleData?.length || 0, maleData?.length || 0);
+    // const differences = [];
+    // const maxLength = Math.max(femaleData?.length || 0, maleData?.length || 0);
 
-    // ✅ Initialize previous values to avoid "undefined" error
-    let previousFemaleValue = 0;
-    let previousMaleValue = 0;
+    // // ✅ Initialize previous values to avoid "undefined" error
+    // let previousFemaleValue = 0;
+    // let previousMaleValue = 0;
 
-    for (let i = 0; i < maxLength; i++) {
-        const femaleValue = femaleData?.[i]?.value ?? previousFemaleValue;
-        const maleValue = maleData?.[i]?.value ?? previousMaleValue;
+    // for (let i = 0; i < maxLength; i++) {
+    //     const femaleValue = femaleData?.[i]?.value ?? previousFemaleValue;
+    //     const maleValue = maleData?.[i]?.value ?? previousMaleValue;
 
-        differences.push({
-            time: i,
-            value: (femaleData?.[i]?.value ?? previousFemaleValue) - (maleData?.[i]?.value ?? previousMaleValue)
-        });
+    //     differences.push({
+    //         time: i,
+    //         value: (femaleData?.[i]?.value ?? previousFemaleValue) - (maleData?.[i]?.value ?? previousMaleValue)
+    //     });
 
-        // ✅ Update previous values for next iteration
-        if (femaleData?.[i]) previousFemaleValue = femaleData[i].value;
-        if (maleData?.[i]) previousMaleValue = maleData[i].value;
-    }
+    //     // ✅ Update previous values for next iteration
+    //     if (femaleData?.[i]) previousFemaleValue = femaleData[i].value;
+    //     if (maleData?.[i]) previousMaleValue = maleData[i].value;
+    // }
+
+    ///////
 
     // ✅ Compute Differences (Always Female - Male, Even If One is Missing)
     // let differences = [];
