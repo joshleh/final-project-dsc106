@@ -1,5 +1,5 @@
-function filterValidData(dataArray, start, end, timeDivisor, samplingRate = 10) {
-    return dataArray.slice(start, end).filter((_, i) => i % samplingRate === 0).map((row, i) => ({
+function filterValidData(dataArray, start, end, timeDivisor) {
+    return dataArray.slice(start, end).map((row, i) => ({
         time: i / timeDivisor,
         value: row[0],
         change: i > 0 ? row[0] - dataArray[i - 1][0] : 0
@@ -51,16 +51,24 @@ async function loadAndProcessData() {
         timeDivisor = 1;
     }
 
+    // function filterValidData(dataArray, start, end, timeDivisor) {
+    //     return dataArray.slice(start, end).map((row, i) => ({
+    //         time: i / timeDivisor,
+    //         value: row[0],
+    //         change: i > 0 ? row[0] - dataArray[i - 1][0] : 0
+    //     })).filter(d => !isNaN(d.value));
+    // }    
+
     let temperatureData = {};
     let activityData = {};
 
     if (selectedGender === "both" || selectedGender === "female") {
         temperatureData.female = filterValidData(femaleTempData, start, end, timeDivisor);
-        activityData.female = filterValidData(femaleActData, start, end, timeDivisor, 20); // Sampling rate of 20
+        activityData.female = filterValidData(femaleActData, start, end, timeDivisor);        
     }
     if (selectedGender === "both" || selectedGender === "male") {
         temperatureData.male = filterValidData(maleTempData, start, end, timeDivisor);
-        activityData.male = filterValidData(maleActData, start, end, timeDivisor, 20); // Sampling rate of 20
+        activityData.male = filterValidData(maleActData, start, end, timeDivisor);
     }
 
     createLineChart("#temperatureChart", temperatureData, "Temperature (°C)", xLabel, ["blue", "red"], selectedRange);
@@ -70,8 +78,6 @@ async function loadAndProcessData() {
     createBarGraph("#activityBarGraph", activityData.female, activityData.male, 
         "Activity Difference", xLabel, selectedRange, activityData, "activity", start, end, timeDivisor);    
 }
-
-document.addEventListener("DOMContentLoaded", loadAndProcessData);
 
 function createLineChart(svgId, data, yLabel, xLabel, colors, timeRange) {
     const svg = d3.select(svgId);
